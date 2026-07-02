@@ -49,11 +49,61 @@ export interface Employee {
   clockInTime: string; // HH:MM AM/PM or "--"
 }
 
-interface Announcement {
+export interface Announcement {
   id: string;
   title: string;
   content: string;
   tag: 'Event' | 'Alert' | 'Offer';
+}
+
+export interface EvReservation {
+  id: string;
+  bayId: string;
+  licensePlate: string;
+  timeSlot: string;
+  status: 'Active' | 'Completed';
+}
+
+export interface HandsFreeDelivery {
+  id: string;
+  storeId: string;
+  valetId: string;
+  status: 'Ready' | 'Collected' | 'En Route' | 'Delivered';
+  location: string;
+  timestamp: string;
+}
+
+export interface VipReservation {
+  id: string;
+  eventId: string;
+  userName: string;
+  ticketCount: number;
+  seatType: string;
+  timestamp: string;
+}
+
+export interface FoodCartItem {
+  name: string;
+  price: number;
+  restaurant: string;
+  qty: number;
+}
+
+export interface FoodCourtOrder {
+  id: string;
+  items: FoodCartItem[];
+  total: number;
+  status: 'Cooking' | 'Ready' | 'Picked Up';
+  timestamp: string;
+}
+
+export interface TableReservation {
+  id: string;
+  restaurantId: string;
+  guests: number;
+  timeSlot: string;
+  preorders: FoodCartItem[];
+  timestamp: string;
 }
 
 interface MallContextType {
@@ -63,6 +113,12 @@ interface MallContextType {
   attendance: Employee[];
   savedCoupons: string[]; // Coupon IDs
   announcements: Announcement[];
+  evReservations: EvReservation[];
+  handsFreeDeliveries: HandsFreeDelivery[];
+  vipReservations: VipReservation[];
+  foodCourtCart: FoodCartItem[];
+  foodCourtOrders: FoodCourtOrder[];
+  tableReservations: TableReservation[];
   onboardTenant: (tenantData: Omit<Tenant, 'floor'>) => void;
   togglePaymentStatus: (roomNumber: number) => void;
   registerVehicle: (vehicle: Omit<VehicleLog, 'timeIn'>) => boolean;
@@ -70,6 +126,16 @@ interface MallContextType {
   updateAttendance: (employeeId: string, status: 'Present' | 'Absent' | 'Late') => void;
   toggleSaveCoupon: (couponId: string) => void;
   exportRevenueSummary: () => string;
+  bookEvSlot: (bayId: string, licensePlate: string, timeSlot: string) => boolean;
+  requestValetDelivery: (storeId: string, valetId: string, location: string) => void;
+  bookVipEvent: (eventId: string, userName: string, ticketCount: number, seatType: string) => void;
+  addToFoodCart: (item: Omit<FoodCartItem, 'qty'>) => void;
+  removeFromFoodCart: (name: string, restaurant: string) => void;
+  clearFoodCart: () => void;
+  checkoutFoodCart: () => void;
+  bookTableWithPreorder: (restaurantId: string, guests: number, timeSlot: string, preorders: FoodCartItem[]) => void;
+  updateHandsFreeStatus: (id: string, status: HandsFreeDelivery['status']) => void;
+  updateFoodOrderStatus: (id: string, status: FoodCourtOrder['status']) => void;
 }
 
 const MallContext = createContext<MallContextType | undefined>(undefined);
@@ -349,6 +415,41 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [announcements] = useState<Announcement[]>(initialAnnouncements);
 
+  const [evReservations, setEvReservations] = useState<EvReservation[]>(() => {
+    const cached = localStorage.getItem('amanora_ev_reservations');
+    return cached ? JSON.parse(cached) : [
+      { id: 'ev_1', bayId: 'EV-01', licensePlate: 'MH-12-RS-9988', timeSlot: '10:00 AM - 12:00 PM', status: 'Active' },
+      { id: 'ev_2', bayId: 'EV-02', licensePlate: 'MH-12-PQ-8888', timeSlot: '02:00 PM - 04:00 PM', status: 'Active' }
+    ];
+  });
+
+  const [handsFreeDeliveries, setHandsFreeDeliveries] = useState<HandsFreeDelivery[]>(() => {
+    const cached = localStorage.getItem('amanora_handsfree');
+    return cached ? JSON.parse(cached) : [
+      { id: 'hfd_1', storeId: 's4', valetId: 'MH-12-RS-9988', status: 'En Route', location: 'Valet Car - Slot A-12', timestamp: new Date(Date.now() - 1800000).toISOString() }
+    ];
+  });
+
+  const [vipReservations, setVipReservations] = useState<VipReservation[]>(() => {
+    const cached = localStorage.getItem('amanora_vip');
+    return cached ? JSON.parse(cached) : [];
+  });
+
+  const [foodCourtCart, setFoodCourtCart] = useState<FoodCartItem[]>(() => {
+    const cached = localStorage.getItem('amanora_food_cart');
+    return cached ? JSON.parse(cached) : [];
+  });
+
+  const [foodCourtOrders, setFoodCourtOrders] = useState<FoodCourtOrder[]>(() => {
+    const cached = localStorage.getItem('amanora_food_orders');
+    return cached ? JSON.parse(cached) : [];
+  });
+
+  const [tableReservations, setTableReservations] = useState<TableReservation[]>(() => {
+    const cached = localStorage.getItem('amanora_table_res');
+    return cached ? JSON.parse(cached) : [];
+  });
+
   // Sync to Local Storage
   useEffect(() => {
     localStorage.setItem('amanora_stores', JSON.stringify(stores));
@@ -369,6 +470,30 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('amanora_coupons', JSON.stringify(savedCoupons));
   }, [savedCoupons]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_ev_reservations', JSON.stringify(evReservations));
+  }, [evReservations]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_handsfree', JSON.stringify(handsFreeDeliveries));
+  }, [handsFreeDeliveries]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_vip', JSON.stringify(vipReservations));
+  }, [vipReservations]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_food_cart', JSON.stringify(foodCourtCart));
+  }, [foodCourtCart]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_food_orders', JSON.stringify(foodCourtOrders));
+  }, [foodCourtOrders]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_table_res', JSON.stringify(tableReservations));
+  }, [tableReservations]);
 
   // Operations
   const onboardTenant = (tenantData: Omit<Tenant, 'floor'>) => {
@@ -495,6 +620,120 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return report;
   };
 
+  const bookEvSlot = (bayId: string, licensePlate: string, timeSlot: string): boolean => {
+    if (!licensePlate.trim() || !bayId.trim() || !timeSlot.trim()) return false;
+    const isOccupied = evReservations.some(
+      r => r.bayId.toLowerCase() === bayId.toLowerCase() && r.status === 'Active'
+    );
+    if (isOccupied) return false;
+    const newReservation: EvReservation = {
+      id: `ev_res_${Date.now()}`,
+      bayId,
+      licensePlate: licensePlate.toUpperCase(),
+      timeSlot,
+      status: 'Active'
+    };
+    setEvReservations(prev => [newReservation, ...prev]);
+    return true;
+  };
+
+  const requestValetDelivery = (storeId: string, valetId: string, location: string) => {
+    const newDelivery: HandsFreeDelivery = {
+      id: `hfd_${Date.now()}`,
+      storeId,
+      valetId,
+      status: 'Ready',
+      location,
+      timestamp: new Date().toISOString()
+    };
+    setHandsFreeDeliveries(prev => [newDelivery, ...prev]);
+  };
+
+  const bookVipEvent = (eventId: string, userName: string, ticketCount: number, seatType: string) => {
+    const newReservation: VipReservation = {
+      id: `vip_res_${Date.now()}`,
+      eventId,
+      userName,
+      ticketCount,
+      seatType,
+      timestamp: new Date().toISOString()
+    };
+    setVipReservations(prev => [newReservation, ...prev]);
+  };
+
+  const addToFoodCart = (item: Omit<FoodCartItem, 'qty'>) => {
+    setFoodCourtCart(prev => {
+      const existing = prev.find(
+        i => i.name.toLowerCase() === item.name.toLowerCase() && i.restaurant.toLowerCase() === item.restaurant.toLowerCase()
+      );
+      if (existing) {
+        return prev.map(
+          i => i.name.toLowerCase() === item.name.toLowerCase() && i.restaurant.toLowerCase() === item.restaurant.toLowerCase()
+            ? { ...i, qty: i.qty + 1 }
+            : i
+        );
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const removeFromFoodCart = (name: string, restaurant: string) => {
+    setFoodCourtCart(prev => {
+      const existing = prev.find(
+        i => i.name.toLowerCase() === name.toLowerCase() && i.restaurant.toLowerCase() === restaurant.toLowerCase()
+      );
+      if (!existing) return prev;
+      if (existing.qty > 1) {
+        return prev.map(
+          i => i.name.toLowerCase() === name.toLowerCase() && i.restaurant.toLowerCase() === restaurant.toLowerCase()
+            ? { ...i, qty: i.qty - 1 }
+            : i
+        );
+      }
+      return prev.filter(
+        i => !(i.name.toLowerCase() === name.toLowerCase() && i.restaurant.toLowerCase() === restaurant.toLowerCase())
+      );
+    });
+  };
+
+  const clearFoodCart = () => {
+    setFoodCourtCart([]);
+  };
+
+  const checkoutFoodCart = () => {
+    if (foodCourtCart.length === 0) return;
+    const total = foodCourtCart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const newOrder: FoodCourtOrder = {
+      id: `fc_ord_${Date.now()}`,
+      items: [...foodCourtCart],
+      total,
+      status: 'Cooking',
+      timestamp: new Date().toISOString()
+    };
+    setFoodCourtOrders(prev => [newOrder, ...prev]);
+    setFoodCourtCart([]);
+  };
+
+  const bookTableWithPreorder = (restaurantId: string, guests: number, timeSlot: string, preorders: FoodCartItem[]) => {
+    const newRes: TableReservation = {
+      id: `tab_res_${Date.now()}`,
+      restaurantId,
+      guests,
+      timeSlot,
+      preorders,
+      timestamp: new Date().toISOString()
+    };
+    setTableReservations(prev => [newRes, ...prev]);
+  };
+
+  const updateHandsFreeStatus = (id: string, status: HandsFreeDelivery['status']) => {
+    setHandsFreeDeliveries(prev => prev.map(d => d.id === id ? { ...d, status } : d));
+  };
+
+  const updateFoodOrderStatus = (id: string, status: FoodCourtOrder['status']) => {
+    setFoodCourtOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
   return (
     <MallContext.Provider value={{
       stores,
@@ -503,13 +742,29 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       attendance,
       savedCoupons,
       announcements,
+      evReservations,
+      handsFreeDeliveries,
+      vipReservations,
+      foodCourtCart,
+      foodCourtOrders,
+      tableReservations,
       onboardTenant,
       togglePaymentStatus,
       registerVehicle,
       checkoutVehicle,
       updateAttendance,
       toggleSaveCoupon,
-      exportRevenueSummary
+      exportRevenueSummary,
+      bookEvSlot,
+      requestValetDelivery,
+      bookVipEvent,
+      addToFoodCart,
+      removeFromFoodCart,
+      clearFoodCart,
+      checkoutFoodCart,
+      bookTableWithPreorder,
+      updateHandsFreeStatus,
+      updateFoodOrderStatus
     }}>
       {children}
     </MallContext.Provider>

@@ -7,7 +7,8 @@ import {
   Grid, 
   Video, 
   Car, 
-  Users 
+  Users,
+  Sparkles
 } from 'lucide-react';
 
 interface BottomNavProps {
@@ -26,6 +27,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'directory', label: 'Directory', icon: Store },
     { id: 'map', label: 'Map', icon: Map },
     { id: 'offers', label: 'Offers', icon: Tag },
+    { id: 'concierge', label: 'VIP', icon: Sparkles },
   ];
 
   const adminMenu = [
@@ -33,6 +35,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'cctv', label: 'CCTV', icon: Video },
     { id: 'parking', label: 'Parking', icon: Car },
     { id: 'attendance', label: 'Staff', icon: Users },
+    { id: 'heatmap', label: 'Heatmap', icon: Map },
   ];
 
   const currentMenu = isAdmin ? adminMenu : visitorMenu;

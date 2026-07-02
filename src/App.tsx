@@ -9,6 +9,7 @@ import { HeroSection } from './components/Visitor/HeroSection';
 import { Directory } from './components/Visitor/Directory';
 import { FloorMap } from './components/Visitor/FloorMap';
 import { OffersHub } from './components/Visitor/OffersHub';
+import { VipConcierge } from './components/Visitor/VipConcierge';
 
 // Admin Sections
 import { TenantManager } from './components/Admin/TenantManager';
@@ -32,6 +33,8 @@ const MainLayout: React.FC = () => {
           return <SmartParking />;
         case 'attendance':
           return <AttendanceLogger />;
+        case 'heatmap':
+          return <FloorMap isAdminView={true} />;
         default:
           return <TenantManager />;
       }
@@ -45,6 +48,8 @@ const MainLayout: React.FC = () => {
           return <FloorMap />;
         case 'offers':
           return <OffersHub />;
+        case 'concierge':
+          return <VipConcierge />;
         default:
           return <HeroSection />;
       }

@@ -9,7 +9,8 @@ import {
   Car, 
   Users, 
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'directory', label: 'Store Directory', icon: Store },
     { id: 'map', label: 'Floor Map', icon: Map },
     { id: 'offers', label: 'Offers & Events', icon: Tag },
+    { id: 'concierge', label: 'VIP Concierge', icon: Sparkles },
   ];
 
   const adminMenu = [
@@ -36,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'cctv', label: 'CCTV Security', icon: Video },
     { id: 'parking', label: 'Smart Parking', icon: Car },
     { id: 'attendance', label: 'Staff Roster', icon: Users },
+    { id: 'heatmap', label: '3D Floor Traffic', icon: Map },
   ];
 
   const currentMenu = isAdmin ? adminMenu : visitorMenu;
