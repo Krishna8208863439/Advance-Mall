@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  --color-luxury-gold: #d4af37;
+  --color-luxury-gold-dark: #b8962c;
+  --color-luxury-gold-light: #f3e5ab;
+  --color-luxury-dark-bg: #090d16;
+  --color-luxury-dark-card: #121824;
+  --color-luxury-dark-card-lighter: #1a2233;
+  --color-luxury-dark-border: #232e44;
+  --color-luxury-emerald: #10b981;
+  --color-luxury-amber: #f59e0b;
+  --color-luxury-rose: #ef4444;
+  --color-luxury-text-muted: #94a3b8;
+  --color-luxury-text-primary: #f8fafc;
+  --font-sans: 'Outfit', 'Inter', sans-serif;
+  --shadow-gold-glow: 0 0 15px rgba(212, 175, 55, 0.15);
+  --shadow-gold-glow-lg: 0 0 25px rgba(212, 175, 55, 0.25);
+}
+
+@layer base {
+  body {
+    @apply bg-luxury-dark-bg text-slate-100 antialiased font-sans selection:bg-luxury-gold selection:text-black;
+  }
+}
+
+/* Custom Scrollbar for Luxury Web App */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #232e44;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Custom Glassmorphism */
+.glass-panel {
+  background: rgba(18, 24, 36, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(35, 46, 68, 0.5);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(26, 34, 51, 0.85);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+/* Custom Animations */
+@keyframes pulse-gold {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  }
+  50% {
+    opacity: .8;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+  }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s infinite ease-in-out;
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 6s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
