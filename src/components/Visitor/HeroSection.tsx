@@ -2,6 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useMall } from '../../context/MallContext';
 import { Calendar, Clock, MapPin, Sparkles, ChevronLeft, ChevronRight, Car, Store, Tag } from 'lucide-react';
 
+const SlideCountdown: React.FC<{ targetDate: string }> = ({ targetDate }) => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calc = () => {
+      const diff = +new Date(targetDate) - +new Date();
+      if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      return {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / 1000 / 60) % 60),
+        seconds: Math.floor((diff / 1000) % 60)
+      };
+    };
+
+    setTimeLeft(calc());
+    const interval = setInterval(() => {
+      setTimeLeft(calc());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return (
+    <div className="flex space-x-1.5 text-[9px] sm:text-[10px] uppercase font-mono font-bold text-luxury-gold bg-black/40 border border-luxury-gold/25 px-2 py-0.5 rounded backdrop-blur-sm shadow-inner shrink-0 select-none">
+      <span>{timeLeft.days}D</span>
+      <span>:</span>
+      <span>{timeLeft.hours.toString().padStart(2, '0')}H</span>
+      <span>:</span>
+      <span>{timeLeft.minutes.toString().padStart(2, '0')}M</span>
+      <span>:</span>
+      <span className="text-white animate-pulse">{timeLeft.seconds.toString().padStart(2, '0')}S</span>
+      <span className="text-slate-400 font-sans tracking-wide ml-1 font-normal lowercase">left</span>
+    </div>
+  );
+};
+
 export const HeroSection: React.FC = () => {
   const { parkingLogs, stores, savedCoupons } = useMall();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -18,6 +54,7 @@ export const HeroSection: React.FC = () => {
       bgGradient: 'from-slate-950 via-slate-900 to-amber-950/60',
       badge: 'FASHION SHOW',
       accentColor: 'text-luxury-gold',
+      targetDate: new Date(Date.now() + 3600000 * 24 * 3.5).toISOString()
     },
     {
       id: 2,
@@ -30,6 +67,7 @@ export const HeroSection: React.FC = () => {
       bgGradient: 'from-slate-950 via-slate-900 to-yellow-950/50',
       badge: 'EXCLUSIVES',
       accentColor: 'text-amber-400',
+      targetDate: new Date(Date.now() + 3600000 * 24 * 15.2).toISOString()
     },
     {
       id: 3,
@@ -42,6 +80,7 @@ export const HeroSection: React.FC = () => {
       bgGradient: 'from-slate-950 via-slate-900 to-slate-800/60',
       badge: 'AUTOMOBILE EV',
       accentColor: 'text-sky-400',
+      targetDate: new Date(Date.now() + 3600000 * 24 * 76.8).toISOString()
     }
   ];
 
@@ -84,11 +123,14 @@ export const HeroSection: React.FC = () => {
               }`}
             >
               {/* Top Banner Tag */}
-              <div className="flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-luxury-gold" />
-                <span className="text-[10px] tracking-widest font-extrabold uppercase bg-luxury-gold/15 border border-luxury-gold/30 px-2.5 py-0.8 rounded text-luxury-gold">
-                  {slide.badge}
-                </span>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-luxury-gold" />
+                  <span className="text-[10px] tracking-widest font-extrabold uppercase bg-luxury-gold/15 border border-luxury-gold/30 px-2.5 py-0.8 rounded text-luxury-gold">
+                    {slide.badge}
+                  </span>
+                </div>
+                <SlideCountdown targetDate={slide.targetDate} />
               </div>
 
               {/* Main Contents */}

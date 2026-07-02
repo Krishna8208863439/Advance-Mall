@@ -28,9 +28,16 @@ interface Block3D {
 }
 
 export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
-  const { stores, rooms } = useMall();
+  const { stores, rooms, onboardTenant } = useMall();
   const [selectedFloor, setSelectedFloor] = useState<FloorType>('Ground');
   const [selectedRoom, setSelectedRoom] = useState<number | null>(30); // Default select room 30
+
+  // Lease Modal State
+  const [showLeaseModal, setShowLeaseModal] = useState(false);
+  const [leaseBrandName, setLeaseBrandName] = useState('');
+  const [leaseOwner, setLeaseOwner] = useState('');
+  const [leasePhone, setLeasePhone] = useState('');
+  const [leaseError, setLeaseError] = useState('');
 
   // 3D Orbit Camera State
   const [pitch, setPitch] = useState(30); // angle in degrees
@@ -743,25 +750,52 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                   </div>
                 ) : (
                   // If vacant, show leasing details
-                  <div className="space-y-4 py-4 text-center">
-                    <span className="text-4xl block">🏢</span>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-extrabold text-slate-200">Room is Available for Lease</h4>
-                      <p className="text-xs text-slate-500">
-                        This retail unit is currently vacant and open for tenant applications.
+                  <div className="space-y-4 py-3">
+                    <div className="text-center">
+                      <span className="text-3xl block">🏢</span>
+                      <h4 className="text-sm font-extrabold text-white mt-1.5">Commercial Lease Signboard</h4>
+                      <p className="text-[10px] text-slate-400 font-light mt-0.5">
+                        Premium retail space available for immediate corporate tenant licensing.
                       </p>
                     </div>
 
-                    <div className="bg-luxury-darkBg/60 p-3 rounded-lg border border-luxury-darkBorder text-left space-y-1.5 text-xs">
+                    <div className="bg-luxury-darkBg/60 p-3.5 rounded-xl border border-luxury-darkBorder space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Area Category:</span>
+                        <span className="text-slate-500">Floor Level:</span>
                         <span className="font-semibold text-slate-300">{selectedRoomData.tenant?.floor}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Suggested Rent:</span>
-                        <span className="font-bold text-luxury-gold">₹{selectedRoomData.tenant?.monthlyRent.toLocaleString()}/mo</span>
+                        <span className="text-slate-500">Unit Dimensions:</span>
+                        <span className="font-semibold text-slate-300">
+                          {selectedRoomData.roomNumber * 25 + 300} sq.ft
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Suggested Rate:</span>
+                        <span className="font-semibold text-slate-300">
+                          ₹{Math.round((selectedRoomData.tenant?.monthlyRent || 100000) / (selectedRoomData.roomNumber * 25 + 300))} / sq.ft
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-luxury-darkBorder/40 pt-2 mt-1">
+                        <span className="text-slate-400 font-bold">Total Monthly Rent:</span>
+                        <span className="font-extrabold text-luxury-gold">
+                          ₹{selectedRoomData.tenant?.monthlyRent.toLocaleString()}/mo
+                        </span>
                       </div>
                     </div>
+
+                    <button
+                      onClick={() => {
+                        setLeaseBrandName('');
+                        setLeaseOwner('');
+                        setLeasePhone('');
+                        setLeaseError('');
+                        setShowLeaseModal(true);
+                      }}
+                      className="w-full bg-luxury-gold hover:bg-luxury-gold-dark text-black font-extrabold text-xs py-2 rounded-lg shadow-gold-glow transition-all"
+                    >
+                      Apply for Commercial Lease
+                    </button>
                   </div>
                 )}
               </div>
@@ -782,6 +816,114 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
           )}
         </div>
       </div>
+
+      {/* Lease Application Modal Overlay */}
+      {showLeaseModal && selectedRoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md border border-luxury-darkBorder bg-luxury-darkCard p-6 rounded-2xl glass-panel relative shadow-2xl">
+            <div className="border-b border-luxury-darkBorder/40 pb-3 mb-4">
+              <h3 className="font-extrabold text-white text-base">
+                Apply for Commercial Lease - Unit #{selectedRoom}
+              </h3>
+              <p className="text-xs text-luxury-textMuted mt-0.5 font-light">Submit tenant owner credentials to lease this unit.</p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setLeaseError('');
+                if (!leaseBrandName.trim()) {
+                  setLeaseError('Brand/Shop Name is required.');
+                  return;
+                }
+                if (!leaseOwner.trim()) {
+                  setLeaseError('Owner Name is required.');
+                  return;
+                }
+                if (!/^[+]?[0-9\s-]{10,15}$/.test(leasePhone.trim())) {
+                  setLeaseError('Please enter a valid phone number.');
+                  return;
+                }
+
+                // Onboard immediately
+                onboardTenant({
+                  roomNumber: selectedRoom,
+                  shopName: leaseBrandName.trim(),
+                  tenantName: leaseOwner.trim(),
+                  phone: leasePhone.trim(),
+                  address: `${selectedFloor} Wing, Amanora Plaza`,
+                  monthlyRent: rooms.find(r => r.roomNumber === selectedRoom)?.monthlyRent || 100000,
+                  paymentStatus: 'Paid'
+                });
+
+                setShowLeaseModal(false);
+              }}
+              className="space-y-4"
+            >
+              {leaseError && (
+                <div className="p-2.5 rounded bg-luxury-rose/10 border border-luxury-rose/30 text-[11px] text-luxury-rose font-bold">
+                  {leaseError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+                  Brand / Shop Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Gucci Boutique"
+                  value={leaseBrandName}
+                  onChange={(e) => setLeaseBrandName(e.target.value)}
+                  className="w-full bg-luxury-darkBg border border-luxury-darkBorder rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-luxury-gold/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+                  Primary Owner Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Johnathan Doe"
+                  value={leaseOwner}
+                  onChange={(e) => setLeaseOwner(e.target.value)}
+                  className="w-full bg-luxury-darkBg border border-luxury-darkBorder rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-luxury-gold/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+                  Owner Phone Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. +91 98765 43210"
+                  value={leasePhone}
+                  onChange={(e) => setLeasePhone(e.target.value)}
+                  className="w-full bg-luxury-darkBg border border-luxury-darkBorder rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-luxury-gold/50"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLeaseModal(false)}
+                  className="flex-1 bg-luxury-darkBg border border-luxury-darkBorder text-slate-400 text-xs font-bold py-2 rounded-lg hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-luxury-gold hover:bg-luxury-gold-dark text-black font-extrabold text-xs py-2 rounded-lg shadow-gold-glow transition-colors"
+                >
+                  Authorize Lease
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

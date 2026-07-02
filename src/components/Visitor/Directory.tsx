@@ -2,6 +2,40 @@ import React, { useState, useMemo } from 'react';
 import { useMall } from '../../context/MallContext';
 import { Search, Phone, Clock, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 
+const isStoreOpen = (hoursStr: string): boolean => {
+  try {
+    const parts = hoursStr.split('-');
+    if (parts.length !== 2) return true;
+    
+    const parseTime = (timeStr: string) => {
+      const clean = timeStr.trim().toUpperCase();
+      const match = clean.match(/^(\d+):(\d+)\s*(AM|PM)$/);
+      if (!match) return null;
+      let hrs = parseInt(match[1], 10);
+      const mins = parseInt(match[2], 10);
+      const ampm = match[3];
+      if (ampm === 'PM' && hrs < 12) hrs += 12;
+      if (ampm === 'AM' && hrs === 12) hrs = 0;
+      return hrs * 60 + mins;
+    };
+
+    const startMinutes = parseTime(parts[0]);
+    const endMinutes = parseTime(parts[1]);
+    
+    if (startMinutes === null || endMinutes === null) return true;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (endMinutes < startMinutes) {
+      return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+    }
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  } catch (e) {
+    return true;
+  }
+};
+
 export const Directory: React.FC = () => {
   const { stores, savedCoupons, toggleSaveCoupon } = useMall();
   
@@ -121,9 +155,23 @@ export const Directory: React.FC = () => {
                       <h3 className="font-extrabold text-sm text-white tracking-wide truncate max-w-[150px]">
                         {store.name}
                       </h3>
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-luxury-gold">
-                        {store.category}
-                      </span>
+                      <div className="flex items-center space-x-1.5 mt-0.5">
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-luxury-gold">
+                          {store.category}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-slate-600" />
+                        {isStoreOpen(store.hours) ? (
+                          <span className="flex items-center text-[9px] text-luxury-emerald font-extrabold tracking-wider uppercase">
+                            <span className="w-1 h-1 bg-luxury-emerald rounded-full mr-1 animate-pulse" />
+                            Open
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-[9px] text-luxury-rose font-extrabold tracking-wider uppercase">
+                            <span className="w-1 h-1 bg-luxury-rose rounded-full mr-1" />
+                            Closed
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
