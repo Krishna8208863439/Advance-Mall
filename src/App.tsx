@@ -1,86 +1,53 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { MallProvider } from './context/MallContext';
+import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import { TopNav } from './components/Layout/TopNav';
 import { Sidebar } from './components/Layout/Sidebar';
 import { BottomNav } from './components/Layout/BottomNav';
-
-// Visitor Sections
 import { HeroSection } from './components/Visitor/HeroSection';
 import { Directory } from './components/Visitor/Directory';
 import { FloorMap } from './components/Visitor/FloorMap';
 import { OffersHub } from './components/Visitor/OffersHub';
 import { VipConcierge } from './components/Visitor/VipConcierge';
 import { MallAtoms } from './components/Visitor/MallAtoms';
+import { AdminLogin } from './components/Admin/AdminLogin';
+import { ForgotPassword } from './components/Admin/ForgotPassword';
+import { ResetPassword } from './components/Admin/ResetPassword';
+import { AdminDashboard } from './components/Admin/AdminDashboard';
 
-// Admin Sections
-import { TenantManager } from './components/Admin/TenantManager';
-import { CCTVControl } from './components/Admin/CCTVControl';
-import { SmartParking } from './components/Admin/SmartParking';
-import { AttendanceLogger } from './components/Admin/AttendanceLogger';
-import { SystemHistory } from './components/Admin/SystemHistory';
+const VisitorLayout: React.FC = () => {
+  const [activeSection, setActiveSection] = React.useState('home');
 
-const MainLayout: React.FC = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [activeSection, setActiveSection] = useState('home');
-
-  // Main Page Router Logic
   const renderContent = () => {
-    if (isAdmin) {
-      switch (activeSection) {
-        case 'tenants':
-          return <TenantManager />;
-        case 'cctv':
-          return <CCTVControl />;
-        case 'parking':
-          return <SmartParking />;
-        case 'attendance':
-          return <AttendanceLogger />;
-        case 'heatmap':
-          return <FloorMap isAdminView={true} />;
-        case 'history':
-          return <SystemHistory />;
-        default:
-          return <TenantManager />;
-      }
-    } else {
-      switch (activeSection) {
-        case 'home':
-          return <HeroSection />;
-        case 'directory':
-          return <Directory />;
-        case 'map':
-          return <FloorMap />;
-        case 'offers':
-          return <OffersHub />;
-        case 'concierge':
-          return <VipConcierge />;
-        case 'mallatoms':
-          return <MallAtoms />;
-        default:
-          return <HeroSection />;
-      }
+    switch (activeSection) {
+      case 'home':
+        return <HeroSection />;
+      case 'directory':
+        return <Directory />;
+      case 'map':
+        return <FloorMap />;
+      case 'offers':
+        return <OffersHub />;
+      case 'concierge':
+        return <VipConcierge />;
+      case 'mallatoms':
+        return <MallAtoms />;
+      default:
+        return <HeroSection />;
     }
   };
 
   return (
     <div className="min-h-screen bg-luxury-darkBg text-slate-100 flex flex-col font-sans">
-      {/* Global Header */}
-      <TopNav 
-        isAdmin={isAdmin} 
-        setIsAdmin={setIsAdmin} 
-        setActiveSection={setActiveSection} 
-      />
+      <TopNav setActiveSection={setActiveSection} />
 
-      {/* Main Workspace layout */}
       <div className="flex flex-1 relative">
-        {/* Desktop Left Sidebar */}
-        <Sidebar 
-          isAdmin={isAdmin} 
-          activeSection={activeSection} 
-          setActiveSection={setActiveSection} 
+        <Sidebar
+          isAdmin={false}
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
         />
 
-        {/* Content Viewer viewport */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+70px)] lg:pb-8">
           <div className="max-w-7xl mx-auto">
             {renderContent()}
@@ -88,21 +55,74 @@ const MainLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* Mobile Sticky Bottom Nav Bar */}
-      <BottomNav 
-        isAdmin={isAdmin} 
-        activeSection={activeSection} 
-        setActiveSection={setActiveSection} 
+      <BottomNav
+        isAdmin={false}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
       />
     </div>
   );
 };
 
+const AdminRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAdminAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-luxury-darkBg flex items-center justify-center text-luxury-gold">
+        Verifying admin session...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = '/admin/login';
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
+const AppRouter: React.FC = () => {
+  const route = useMemo(() => {
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    if (path.startsWith('/admin/login')) return 'admin-login';
+    if (path.startsWith('/admin/forgot-password')) return 'admin-forgot';
+    if (path.startsWith('/admin/reset-password')) return 'admin-reset';
+    if (path.startsWith('/admin')) return 'admin-dashboard';
+    return 'visitor';
+  }, []);
+
+  if (route === 'admin-login') {
+    return <AdminLogin />;
+  }
+
+  if (route === 'admin-forgot') {
+    return <ForgotPassword />;
+  }
+
+  if (route === 'admin-reset') {
+    return <ResetPassword />;
+  }
+
+  if (route === 'admin-dashboard') {
+    return (
+      <AdminRouteGuard>
+        <AdminDashboard />
+      </AdminRouteGuard>
+    );
+  }
+
+  return <VisitorLayout />;
+};
+
 function App() {
   return (
-    <MallProvider>
-      <MainLayout />
-    </MallProvider>
+    <AdminAuthProvider>
+      <MallProvider>
+        <AppRouter />
+      </MallProvider>
+    </AdminAuthProvider>
   );
 }
 

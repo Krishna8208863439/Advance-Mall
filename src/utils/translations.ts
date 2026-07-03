@@ -16,6 +16,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.heatmap': '3D Floor Traffic',
     'nav.history': 'System History',
     'nav.adminControl': 'Admin Control',
+    'nav.adminLogin': 'Admin Login',
     'nav.exitAdmin': 'Exit Admin',
     'nav.savedOffers': 'Saved Offers',
 
@@ -173,6 +174,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.heatmap': '३डी यातायात',
     'nav.history': 'सिस्टम इतिहास',
     'nav.adminControl': 'एडमिन नियंत्रण',
+    'nav.adminLogin': 'एडमिन लॉगिन',
     'nav.exitAdmin': 'एडमिन से बाहर',
     'nav.savedOffers': 'सुरक्षित ऑफ़र',
 
