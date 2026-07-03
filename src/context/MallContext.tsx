@@ -1,5 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { translations } from '../utils/translations';
+import type { Language } from '../utils/translations';
 
 // Interfaces
 export interface Offer {
@@ -199,6 +201,9 @@ interface MallContextType {
   addActivityLog: (action: string, details: string, userType: 'Admin' | 'Visitor') => void;
   reserveProduct: (productId: string, qty: number, customerName: string, licensePlate?: string, paymentId?: string, paymentMethod?: 'Razorpay' | 'In-Store') => { success: boolean; error?: string; booking?: ProductBooking };
   pickupBooking: (bookingId: string) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
 }
 
 const MallContext = createContext<MallContextType | undefined>(undefined);
@@ -451,6 +456,11 @@ const initialProducts: MallProduct[] = [
 ];
 
 export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>(() => {
+    const cached = localStorage.getItem('amanora_lang');
+    return (cached === 'hi' || cached === 'en') ? cached as Language : 'en';
+  });
+
   const [stores, setStores] = useState<Store[]>(() => {
     const cached = localStorage.getItem('amanora_stores');
     return cached ? JSON.parse(cached) : initialStores;
@@ -623,6 +633,22 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('amanora_table_res', JSON.stringify(tableReservations));
   }, [tableReservations]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_lang', language);
+  }, [language]);
+
+  const t = (key: string): string => {
+    const langDict = translations[language];
+    if (langDict && langDict[key]) {
+      return langDict[key];
+    }
+    const enDict = translations['en'];
+    if (enDict && enDict[key]) {
+      return enDict[key];
+    }
+    return key;
+  };
 
   // Operations
   const addActivityLog = (action: string, details: string, userType: 'Admin' | 'Visitor') => {
@@ -1034,7 +1060,10 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       releaseSalary,
       addActivityLog,
       reserveProduct,
-      pickupBooking
+      pickupBooking,
+      language,
+      setLanguage,
+      t
     }}>
       {children}
     </MallContext.Provider>

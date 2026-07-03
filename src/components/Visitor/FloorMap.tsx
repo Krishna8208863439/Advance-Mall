@@ -28,11 +28,35 @@ interface Block3D {
 }
 
 export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
-  const { stores, rooms, onboardTenant } = useMall();
+  const { stores, rooms, onboardTenant, language, t } = useMall();
   const [selectedFloor, setSelectedFloor] = useState<FloorType>('Ground');
   const [selectedRoom, setSelectedRoom] = useState<number | null>(30); // Default select room 30
   const [mapMode, setMapMode] = useState<'3d' | '2d'>('3d');
   const [userLocation, setUserLocation] = useState<number | null>(null);
+
+  const translateCategory = (cat: string) => {
+    if (language === 'hi') {
+      const map: Record<string, string> = {
+        'All Types': 'सभी श्रेणियां',
+        'Automobile': 'ऑटोमोबाइल',
+        'Bags & Accessories': 'बैग और सामान',
+        'Beauty & Skincare': 'सुंदरता और त्वचा',
+        'Denims & Casuals': 'डेनिम और कैजुअल',
+        'Electronics': 'इलेक्ट्रॉनिक्स',
+        'Ethnicwear': 'पारंपरिक परिधान',
+        'Eyewear': 'चश्मा',
+        'Food & Dine': 'भोजन और रेस्तरां',
+        'Entertainment': 'मनोरंजन',
+        'Home & Lifestyle': 'होम और लाइफस्टाइल',
+        'Hypermarket': 'हाइपरमार्केट',
+        'Jewellery': 'आभूषण',
+        'Kids Care': 'बच्चों की देखभाल',
+        'Watches': 'घड़ियाँ'
+      };
+      return map[cat] || cat;
+    }
+    return cat;
+  };
 
   // Lease Modal State
   const [showLeaseModal, setShowLeaseModal] = useState(false);
@@ -609,12 +633,12 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center">
             <Compass className="w-5 h-5 text-luxury-gold mr-2" />
-            {isAdminView ? 'Admin Digital Twin View' : '3D Spatial Floor Map'}
+            {isAdminView ? (language === 'en' ? 'Admin Digital Twin View' : 'एडमिन डिजिटल ट्विन व्यू') : t('map.title')}
           </h2>
           <p className="text-xs text-luxury-textMuted mt-1">
             {isAdminView 
-              ? 'Observe live Wi-Fi triangulation heatmaps, queue density index, and floor load allocations.'
-              : 'Interact with the 3D twin of Amanora Plaza. Drag to rotate model, scroll to zoom, and tap units.'}
+              ? (language === 'en' ? 'Observe live Wi-Fi triangulation heatmaps, queue density index, and floor load allocations.' : 'लाइव वाई-फाई हीटमैप, भीड़ सूचकांक और लोड आवंटन देखें।')
+              : t('map.sub')}
           </p>
         </div>
 
@@ -629,7 +653,7 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              3D View
+              {language === 'en' ? '3D View' : '३डी नक़्शा'}
             </button>
             <button
               onClick={() => setMapMode('2d')}
@@ -639,7 +663,7 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              2D Map
+              {language === 'en' ? '2D Map' : '२डी नक़्शा'}
             </button>
           </div>
 
@@ -663,7 +687,7 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {f}
+                {language === 'en' ? f : f === 'Lower Ground' ? 'लोअर ग्राउंड' : f === 'Ground' ? 'ग्राउंड फ्लोर' : f === 'First' ? 'प्रथम तल' : 'द्वितीय तल'}
               </button>
             ))}
           </div>
@@ -681,20 +705,20 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
             <div className="flex flex-wrap gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-400">
               <div className="flex items-center space-x-1.5">
                 <span className="w-3 h-3 bg-luxury-gold/20 border border-luxury-gold/50 rounded" />
-                <span>Boutique</span>
+                <span>{language === 'en' ? 'Boutique' : 'दुकान'}</span>
               </div>
               <div className="flex items-center space-x-1.5">
                 <span className="w-3 h-3 bg-luxury-darkCard border border-luxury-darkBorder rounded" />
-                <span>Lease Space</span>
+                <span>{language === 'en' ? 'Lease Space' : 'खाली जगह'}</span>
               </div>
               <div className="flex items-center space-x-1.5">
                 <span className="w-3 h-3 bg-emerald-500/20 border border-emerald-500 rounded" />
-                <span>Amenities</span>
+                <span>{language === 'en' ? 'Amenities' : 'सुविधाएं'}</span>
               </div>
               {isAdminView && (
                 <div className="flex items-center space-x-1.5 text-luxury-rose animate-pulse">
                   <Flame className="w-3.5 h-3.5" />
-                  <span>Wi-Fi Triangulation Heatmap (Live)</span>
+                  <span>{language === 'en' ? 'Wi-Fi Triangulation Heatmap (Live)' : 'वाई-फाई हीटमैप (लाइव)'}</span>
                 </div>
               )}
             </div>
@@ -833,14 +857,14 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                 <div className="flex items-start justify-between border-b border-luxury-darkBorder/40 pb-3">
                   <div>
                     <span className="text-[9px] uppercase font-bold tracking-widest text-luxury-gold">
-                      Spatial Node Profile
+                      {t('map.spatialNode')}
                     </span>
                     <h3 className="text-lg font-extrabold text-white">
-                      Retail Unit #{selectedRoomData.roomNumber}
+                      {language === 'en' ? 'Retail Unit #' : 'इकाई #'}{selectedRoomData.roomNumber}
                     </h3>
                   </div>
                   <span className="text-[10px] font-extrabold uppercase bg-luxury-darkBorder/60 text-slate-300 px-2 py-0.5 rounded border border-luxury-darkBorder/50">
-                    {selectedFloor}
+                    {language === 'en' ? selectedFloor : selectedFloor === 'Lower Ground' ? 'लोअर ग्राउंड' : selectedFloor === 'Ground' ? 'ग्राउंड फ्लोर' : selectedFloor === 'First' ? 'प्रथम तल' : 'द्वितीय तल'}
                   </span>
                 </div>
 
@@ -856,7 +880,7 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                     }`}
                   >
                     <span>📍</span>
-                    <span>{userLocation === selectedRoomData.roomNumber ? 'Current Location Node' : 'Set as My Location'}</span>
+                    <span>{userLocation === selectedRoomData.roomNumber ? t('map.myLocation') : t('map.setMyLocation')}</span>
                   </button>
                 )}
 
@@ -869,7 +893,7 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                         {selectedRoomData.store.name}
                       </h4>
                       <p className="text-[10px] text-luxury-gold font-bold uppercase tracking-wider mt-0.5">
-                        Category: {selectedRoomData.store.category}
+                        {language === 'en' ? 'Category' : 'श्रेणी'}: {translateCategory(selectedRoomData.store.category)}
                       </p>
                       
                       {/* Live density indicator */}
@@ -877,10 +901,10 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                         <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider mb-1.5">
                           <span className="text-slate-400 flex items-center">
                             <Activity className="w-3.5 h-3.5 text-luxury-gold mr-1" />
-                            Live Queue Density
+                            {t('map.crowdDensity')}
                           </span>
                           <span className={getCrowdScore(selectedRoomData.roomNumber) > 75 ? 'text-luxury-rose' : getCrowdScore(selectedRoomData.roomNumber) > 40 ? 'text-luxury-amber' : 'text-luxury-emerald'}>
-                            {getCrowdScore(selectedRoomData.roomNumber) > 75 ? 'Heavy Crowd' : getCrowdScore(selectedRoomData.roomNumber) > 40 ? 'Moderate' : 'Smooth Flow'}
+                            {getCrowdScore(selectedRoomData.roomNumber) > 75 ? t('map.heavy') : getCrowdScore(selectedRoomData.roomNumber) > 40 ? t('map.moderate') : t('map.smoothFlow')}
                           </span>
                         </div>
                         <div className="h-1.5 w-full bg-luxury-darkBorder rounded-full overflow-hidden">

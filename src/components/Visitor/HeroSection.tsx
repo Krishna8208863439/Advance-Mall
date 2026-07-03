@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMall } from '../../context/MallContext';
 import { Calendar, Clock, MapPin, Sparkles, ChevronLeft, ChevronRight, Car, Store, Tag } from 'lucide-react';
 
-const SlideCountdown: React.FC<{ targetDate: string }> = ({ targetDate }) => {
+const SlideCountdown: React.FC<{ targetDate: string; language: string }> = ({ targetDate, language }) => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -33,52 +33,58 @@ const SlideCountdown: React.FC<{ targetDate: string }> = ({ targetDate }) => {
       <span>{timeLeft.minutes.toString().padStart(2, '0')}M</span>
       <span>:</span>
       <span className="text-white animate-pulse">{timeLeft.seconds.toString().padStart(2, '0')}S</span>
-      <span className="text-slate-400 font-sans tracking-wide ml-1 font-normal lowercase">left</span>
+      <span className="text-slate-400 font-sans tracking-wide ml-1 font-normal lowercase">{language === 'en' ? 'left' : 'शेष'}</span>
     </div>
   );
 };
 
 export const HeroSection: React.FC = () => {
-  const { parkingLogs, stores, savedCoupons } = useMall();
+  const { parkingLogs, stores, savedCoupons, language } = useMall();
   const [activeSlide, setActiveSlide] = useState(0);
 
   const slides = [
     {
       id: 1,
-      title: 'Amanora Summer Runway',
-      subtitle: 'Haute Couture Exhibition',
-      description: 'Experience fashion like never before. Top global designers unveil their summer collections live at the Central Plaza.',
-      date: 'June 18 - June 20, 2026',
-      time: '05:00 PM onwards',
-      location: 'Central Plaza, Ground Floor',
+      title: language === 'en' ? 'Amanora Summer Runway' : 'अमनोरा समर रनवे',
+      subtitle: language === 'en' ? 'Haute Couture Exhibition' : 'हाट कॉउचर प्रदर्शनी',
+      description: language === 'en' 
+        ? 'Experience fashion like never before. Top global designers unveil their summer collections live at the Central Plaza.'
+        : 'फैशन का ऐसा अनुभव पहले कभी नहीं हुआ। शीर्ष वैश्विक डिजाइनर सेंट्रल प्लाजा में अपने ग्रीष्मकालीन कलेक्शन का लाइव अनावरण करेंगे।',
+      date: language === 'en' ? 'June 18 - June 20, 2026' : '१८ जून - २० जून, २०२६',
+      time: language === 'en' ? '05:00 PM onwards' : 'शाम ०५:०० बजे से',
+      location: language === 'en' ? 'Central Plaza, Ground Floor' : 'सेंट्रल प्लाजा, ग्राउंड फ्लोर',
       bgGradient: 'from-slate-950 via-slate-900 to-amber-950/60',
-      badge: 'FASHION SHOW',
+      badge: language === 'en' ? 'FASHION SHOW' : 'फैशन शो',
       accentColor: 'text-luxury-gold',
       targetDate: new Date(Date.now() + 3600000 * 24 * 3.5).toISOString()
     },
     {
       id: 2,
-      title: 'The Elite Gold Souk Festival',
-      subtitle: 'Exquisite Heirloom Bridal Showcases',
-      description: 'Explore breathtaking collections in 22k pure gold and diamonds with zero making charges and complimentary certified valuations.',
-      date: 'June 10 - June 30, 2026',
-      time: '10:30 AM - 09:30 PM',
-      location: 'Grand Atrium, Ground Floor',
+      title: language === 'en' ? 'The Elite Gold Souk Festival' : 'द एलीट गोल्ड सूक फेस्टिवल',
+      subtitle: language === 'en' ? 'Exquisite Heirloom Bridal Showcases' : 'उत्कृष्ट दुल्हन आभूषण प्रदर्शनी',
+      description: language === 'en'
+        ? 'Explore breathtaking collections in 22k pure gold and diamonds with zero making charges and complimentary certified valuations.'
+        : '२२ कैरेट शुद्ध सोने और हीरों में लुभावने डिज़ाइनों की खोज करें। बिना किसी मेकिंग चार्ज और मुफ्त प्रमाणित मूल्यांकन के।',
+      date: language === 'en' ? 'June 10 - June 30, 2026' : '१० जून - ३० जून, २०२६',
+      time: language === 'en' ? '10:30 AM - 09:30 PM' : 'सुबह १०:३० - रात ०९:३०',
+      location: language === 'en' ? 'Grand Atrium, Ground Floor' : 'ग्रैंड एट्रियम, ग्राउंड फ्लोर',
       bgGradient: 'from-slate-950 via-slate-900 to-yellow-950/50',
-      badge: 'EXCLUSIVES',
+      badge: language === 'en' ? 'EXCLUSIVES' : 'विशेष',
       accentColor: 'text-amber-400',
       targetDate: new Date(Date.now() + 3600000 * 24 * 15.2).toISOString()
     },
     {
       id: 3,
-      title: 'Mercedes-Benz EQ Launch',
-      subtitle: 'Future of Sustainable Driving',
-      description: 'Get behind the wheel of Mercedes-Benz EQ electric luxury sedans. Book direct VIP test drives and receive elite lifestyle merchandise.',
-      date: 'Ongoing until Aug 31, 2026',
-      time: '10:00 AM - 09:00 PM',
-      location: 'Mercedes Pavilion, Room 35',
+      title: language === 'en' ? 'Mercedes-Benz EQ Launch' : 'मर्सिडीज-बेंज ईक्यू लॉन्च',
+      subtitle: language === 'en' ? 'Future of Sustainable Driving' : 'टिकाऊ ड्राइविंग का भविष्य',
+      description: language === 'en'
+        ? 'Get behind the wheel of Mercedes-Benz EQ electric luxury sedans. Book direct VIP test drives and receive elite lifestyle merchandise.'
+        : 'मर्सिडीज-बेंज ईक्यू इलेक्ट्रिक लक्जरी सेडान के पहिये के पीछे बैठें। सीधे वीआईपी टेस्ट ड्राइव बुक करें और विशेष उपहार प्राप्त करें।',
+      date: language === 'en' ? 'Ongoing until Aug 31, 2026' : '३१ अगस्त, २०२६ तक जारी',
+      time: language === 'en' ? '10:00 AM - 09:00 PM' : 'सुबह १०:०० - रात ०९:००',
+      location: language === 'en' ? 'Mercedes Pavilion, Room 35' : 'मर्सिडीज पवेलियन, रूम ३५',
       bgGradient: 'from-slate-950 via-slate-900 to-slate-800/60',
-      badge: 'AUTOMOBILE EV',
+      badge: language === 'en' ? 'AUTOMOBILE EV' : 'ईवी वाहन',
       accentColor: 'text-sky-400',
       targetDate: new Date(Date.now() + 3600000 * 24 * 76.8).toISOString()
     }
@@ -101,18 +107,15 @@ export const HeroSection: React.FC = () => {
   };
 
   // Stats calculation
-  const totalOccupiedParking = parkingLogs.length;
-  const totalParkingSlots = 100; // 50 for 2W, 50 for 4W
-  const freeParkingSlots = totalParkingSlots - totalOccupiedParking;
   const totalStores = stores.length;
+  const occupiedSlots = parkingLogs.length;
+  const freeParkingSlots = Math.max(0, 100 - occupiedSlots);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Premium Hero Carousel */}
-      <div className="relative rounded-2xl overflow-hidden border border-luxury-darkBorder glass-panel h-[360px] md:h-[400px]">
-        {/* Carousel Background Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
-
+    <div className="space-y-6">
+      
+      {/* Event Showcase Slider */}
+      <div className="relative h-[300px] md:h-[400px] w-full rounded-3xl overflow-hidden border border-luxury-darkBorder shadow-2xl">
         {slides.map((slide, idx) => {
           const isSelected = activeSlide === idx;
           return (
@@ -130,7 +133,7 @@ export const HeroSection: React.FC = () => {
                     {slide.badge}
                   </span>
                 </div>
-                <SlideCountdown targetDate={slide.targetDate} />
+                <SlideCountdown targetDate={slide.targetDate} language={language} />
               </div>
 
               {/* Main Contents */}
@@ -168,13 +171,13 @@ export const HeroSection: React.FC = () => {
         {/* Carousel Control Buttons */}
         <button
           onClick={handlePrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-luxury-darkBorder glass-panel flex items-center justify-center text-slate-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all active:scale-95"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-luxury-darkBorder glass-panel flex items-center justify-center text-slate-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all active:scale-95 z-10"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={handleNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-luxury-darkBorder glass-panel flex items-center justify-center text-slate-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all active:scale-95"
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-luxury-darkBorder glass-panel flex items-center justify-center text-slate-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all active:scale-95 z-10"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -201,9 +204,13 @@ export const HeroSection: React.FC = () => {
             <Clock className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">MALL HOURS</span>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">
+              {language === 'en' ? 'MALL HOURS' : 'मॉल का समय'}
+            </span>
             <p className="text-sm font-extrabold text-white">09:00 AM - 11:30 PM</p>
-            <span className="inline-block mt-1 px-1.5 py-0.2 text-[9px] font-extrabold bg-luxury-emerald/15 text-luxury-emerald uppercase rounded tracking-wider">Open Now</span>
+            <span className="inline-block mt-1 px-1.5 py-0.2 text-[9px] font-extrabold bg-luxury-emerald/15 text-luxury-emerald uppercase rounded tracking-wider">
+              {language === 'en' ? 'Open Now' : 'अभी खुला है'}
+            </span>
           </div>
         </div>
 
@@ -213,9 +220,15 @@ export const HeroSection: React.FC = () => {
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">ACTIVE STORES</span>
-            <p className="text-sm font-extrabold text-white">{totalStores} Brands</p>
-            <p className="text-[10px] text-slate-400 mt-1">Across 4 luxury floors</p>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">
+              {language === 'en' ? 'ACTIVE STORES' : 'सक्रिय दुकानें'}
+            </span>
+            <p className="text-sm font-extrabold text-white">
+              {totalStores} {language === 'en' ? 'Brands' : 'ब्रांड्स'}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">
+              {language === 'en' ? 'Across 4 luxury floors' : '४ भव्य मंजिलों पर'}
+            </p>
           </div>
         </div>
 
@@ -225,9 +238,15 @@ export const HeroSection: React.FC = () => {
             <Car className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">PARKING SPACES</span>
-            <p className="text-sm font-extrabold text-white">{freeParkingSlots} Free Slots</p>
-            <p className="text-[10px] text-slate-400 mt-1">Cap: 100 (2W & 4W)</p>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">
+              {language === 'en' ? 'PARKING SPACES' : 'पार्किंग स्थान'}
+            </span>
+            <p className="text-sm font-extrabold text-white">
+              {freeParkingSlots} {language === 'en' ? 'Free Slots' : 'खाली जगह'}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">
+              {language === 'en' ? 'Cap: 100 (2W & 4W)' : 'क्षमता: १०० (२ पहिया और ४ पहिया)'}
+            </p>
           </div>
         </div>
 
@@ -237,9 +256,15 @@ export const HeroSection: React.FC = () => {
             <Tag className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">SAVED SAVINGS</span>
-            <p className="text-sm font-extrabold text-white">{savedCoupons.length} Active</p>
-            <p className="text-[10px] text-slate-400 mt-1">Saved coupons on phone</p>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">
+              {language === 'en' ? 'SAVED SAVINGS' : 'बचाए गए ऑफ़र'}
+            </span>
+            <p className="text-sm font-extrabold text-white">
+              {savedCoupons.length} {language === 'en' ? 'Active' : 'सक्रिय'}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">
+              {language === 'en' ? 'Saved coupons on phone' : 'सुरक्षित कूपन आपके फोन पर'}
+            </p>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useMall } from '../../context/MallContext';
 import { 
   Home, 
   Store, 
@@ -26,23 +27,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeSection,
   setActiveSection,
 }) => {
+  const { t, language } = useMall();
+
   // Navigation Menu Definitions
   const visitorMenu = [
-    { id: 'home', label: 'Homepage', icon: Home },
-    { id: 'directory', label: 'Store Directory', icon: Store },
-    { id: 'map', label: 'Floor Map', icon: Map },
-    { id: 'offers', label: 'Offers & Events', icon: Tag },
-    { id: 'concierge', label: 'VIP Concierge', icon: Sparkles },
-    { id: 'mallatoms', label: 'Online Booking', icon: ShoppingBag },
+    { id: 'home', label: t('nav.home'), icon: Home },
+    { id: 'directory', label: t('nav.directory'), icon: Store },
+    { id: 'map', label: t('nav.map'), icon: Map },
+    { id: 'offers', label: t('nav.offers'), icon: Tag },
+    { id: 'concierge', label: t('nav.concierge'), icon: Sparkles },
+    { id: 'mallatoms', label: t('nav.mallatoms'), icon: ShoppingBag },
   ];
 
   const adminMenu = [
-    { id: 'tenants', label: 'Tenant Ledger', icon: Grid },
-    { id: 'cctv', label: 'CCTV Security', icon: Video },
-    { id: 'parking', label: 'Smart Parking', icon: Car },
-    { id: 'attendance', label: 'Staff Hub', icon: Users },
-    { id: 'heatmap', label: '3D Floor Traffic', icon: Map },
-    { id: 'history', label: 'System History', icon: History },
+    { id: 'tenants', label: t('nav.tenants'), icon: Grid },
+    { id: 'cctv', label: t('nav.cctv'), icon: Video },
+    { id: 'parking', label: t('nav.parking'), icon: Car },
+    { id: 'attendance', label: t('nav.attendance'), icon: Users },
+    { id: 'heatmap', label: t('nav.heatmap'), icon: Map },
+    { id: 'history', label: t('nav.history'), icon: History },
   ];
 
   const currentMenu = isAdmin ? adminMenu : visitorMenu;
@@ -53,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation Section Title */}
         <div className="px-3">
           <p className="text-[10px] font-bold tracking-widest text-luxury-gold uppercase">
-            {isAdmin ? 'System Panel' : 'Visitor Guide'}
+            {isAdmin ? (language === 'en' ? 'System Panel' : 'सिस्टम पैनल') : (language === 'en' ? 'Visitor Guide' : 'विज़िटर गाइड')}
           </p>
         </div>
 

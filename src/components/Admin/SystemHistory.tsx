@@ -3,7 +3,7 @@ import { useMall } from '../../context/MallContext';
 import { Activity, ShieldAlert, User, Search, RefreshCw, Filter } from 'lucide-react';
 
 export const SystemHistory: React.FC = () => {
-  const { activityLogs } = useMall();
+  const { activityLogs, language } = useMall();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterUserType, setFilterUserType] = useState<'All' | 'Admin' | 'Visitor'>('All');
 
@@ -70,10 +70,12 @@ export const SystemHistory: React.FC = () => {
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center">
             <Activity className="w-5 h-5 text-luxury-gold mr-2" />
-            Global System Activity Logger
+            {language === 'en' ? 'Global System Activity Logger' : 'ग्लोबल सिस्टम गतिविधि लॉग'}
           </h2>
           <p className="text-xs text-luxury-textMuted mt-1">
-            Centralized audit trail documenting real-time telemetry, state modifications, and user interactions.
+            {language === 'en' 
+              ? 'Centralized audit trail documenting real-time telemetry, state modifications, and user interactions.'
+              : 'वास्तविक समय टेलीमेट्री, राज्य संशोधनों और उपयोगकर्ता इंटरैक्शन का दस्तावेजीकरण करने वाला केंद्रीकृत ऑडिट निशान।'}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export const SystemHistory: React.FC = () => {
           className="flex items-center space-x-1.5 px-3 py-1.5 bg-luxury-darkCard border border-luxury-darkBorder text-slate-400 hover:text-white rounded-lg text-xs font-semibold transition-all duration-300"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>Reset Filters</span>
+          <span>{language === 'en' ? 'Reset Filters' : 'फ़िल्टर रीसेट करें'}</span>
         </button>
       </div>
 
@@ -96,8 +98,8 @@ export const SystemHistory: React.FC = () => {
             <Activity className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Total Audit Trail</span>
-            <span className="text-lg font-black text-white">{totalLogs} entries</span>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">{language === 'en' ? 'Total Audit Trail' : 'कुल गतिविधि लॉग'}</span>
+            <span className="text-lg font-black text-white">{totalLogs} {language === 'en' ? 'entries' : 'प्रविष्टियाँ'}</span>
           </div>
         </div>
 
@@ -106,8 +108,8 @@ export const SystemHistory: React.FC = () => {
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Admin Interventions</span>
-            <span className="text-lg font-black text-white">{adminLogs} actions</span>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">{language === 'en' ? 'Admin Interventions' : 'एडमिन हस्तक्षेप'}</span>
+            <span className="text-lg font-black text-white">{adminLogs} {language === 'en' ? 'actions' : 'कार्रवाई'}</span>
           </div>
         </div>
 

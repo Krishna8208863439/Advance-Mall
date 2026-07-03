@@ -34,7 +34,9 @@ export const VipConcierge: React.FC = () => {
     removeFromFoodCart,
     clearFoodCart,
     checkoutFoodCart,
-    bookTableWithPreorder
+    bookTableWithPreorder,
+    language,
+    t
   } = useMall();
 
   const [activeTab, setActiveTab] = useState<'itinerary' | 'ev' | 'findcar' | 'valet' | 'events' | 'food'>('itinerary');
@@ -347,10 +349,10 @@ export const VipConcierge: React.FC = () => {
       <div>
         <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center">
           <Sparkles className="w-5 h-5 text-luxury-gold mr-2" />
-          VIP Luxury Concierge & Smart Services
+          {t('vip.title')}
         </h2>
         <p className="text-xs text-luxury-textMuted mt-1">
-          Access premium valet delivery, book EV slots, plan itineraries, reservation tables, and get AR parking guidance.
+          {t('vip.sub')}
         </p>
       </div>
 
@@ -363,7 +365,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <Compass className="w-4 h-4 mb-1" />
-          AI Planner
+          {language === 'en' ? 'AI Planner' : 'योजनाकार'}
         </button>
 
         <button
@@ -373,7 +375,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <Zap className="w-4 h-4 mb-1" />
-          EV Booking
+          {language === 'en' ? 'EV Booking' : 'ईवी बुकिंग'}
         </button>
 
         <button
@@ -383,7 +385,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <Car className="w-4 h-4 mb-1" />
-          Find My Car
+          {language === 'en' ? 'Find My Car' : 'कार खोजें'}
         </button>
 
         <button
@@ -393,7 +395,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <ShoppingBag className="w-4 h-4 mb-1" />
-          Hands-Free
+          {language === 'en' ? 'Hands-Free' : 'हाथ-मुक्त'}
         </button>
 
         <button
@@ -403,7 +405,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <Calendar className="w-4 h-4 mb-1" />
-          VIP RSVP
+          {language === 'en' ? 'VIP RSVP' : 'वीआईपी इवेंट'}
         </button>
 
         <button
@@ -413,7 +415,7 @@ export const VipConcierge: React.FC = () => {
           }`}
         >
           <Coffee className="w-4 h-4 mb-1" />
-          Food Court
+          {language === 'en' ? 'Food Court' : 'फूड कोर्ट'}
         </button>
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMall } from '../../context/MallContext';
-import { Megaphone, ShieldCheck, User, Sparkles, BookOpen } from 'lucide-react';
+import { Megaphone, ShieldCheck, User, Sparkles, BookOpen, Globe } from 'lucide-react';
 
 interface TopNavProps {
   isAdmin: boolean;
@@ -13,7 +13,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   setIsAdmin,
   setActiveSection,
 }) => {
-  const { announcements, savedCoupons } = useMall();
+  const { announcements, savedCoupons, language, setLanguage, t } = useMall();
   const [tickerIndex, setTickerIndex] = useState(0);
 
   // Auto rotate announcements in the header ticker
@@ -66,12 +66,24 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-luxury-gold/10 border border-luxury-gold/30 text-luxury-gold text-xs font-semibold animate-pulse hover:bg-luxury-gold/20 transition-all"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Saved Offers:</span>
+            <span className="hidden sm:inline">{t('nav.savedOffers')}:</span>
             <span className="bg-luxury-gold text-black rounded-full px-1.5 py-0.2 text-[10px] font-bold">
               {savedCoupons.length}
             </span>
           </button>
         )}
+
+        {/* Language Switcher Button */}
+        <button
+          onClick={() => {
+            const nextLang = language === 'en' ? 'hi' : 'en';
+            setLanguage(nextLang);
+          }}
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-luxury-darkBg/60 border border-luxury-darkBorder text-slate-300 hover:text-white hover:border-luxury-gold/50 text-xs font-bold transition-all duration-300"
+        >
+          <Globe className="w-4 h-4 text-luxury-gold" />
+          <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
+        </button>
 
         {/* Admin Switcher */}
         <button
@@ -94,12 +106,12 @@ export const TopNav: React.FC<TopNavProps> = ({
           {isAdmin ? (
             <>
               <User className="w-4 h-4" />
-              <span>Exit Admin</span>
+              <span>{t('nav.exitAdmin')}</span>
             </>
           ) : (
             <>
               <ShieldCheck className="w-4 h-4" />
-              <span>Admin Control</span>
+              <span>{t('nav.adminControl')}</span>
             </>
           )}
         </button>

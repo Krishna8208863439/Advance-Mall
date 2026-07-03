@@ -3,7 +3,7 @@ import { useMall } from '../../context/MallContext';
 import { Store, ShoppingBag, Search, AlertTriangle, CheckCircle, Car, ArrowRight, ShieldCheck, Ticket, X } from 'lucide-react';
 
 export const MallAtoms: React.FC = () => {
-  const { products, productBookings, reserveProduct, parkingLogs } = useMall();
+  const { products, productBookings, reserveProduct, parkingLogs, language, t } = useMall();
   
   // Tabs: Catalog vs Reservations
   const [activeTab, setActiveTab] = useState<'catalog' | 'reservations'>('catalog');
@@ -137,10 +137,10 @@ export const MallAtoms: React.FC = () => {
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center">
             <ShoppingBag className="w-5 h-5 text-luxury-gold mr-2" />
-            Mall Atoms - Smart Online Booking
+            {t('shop.title')}
           </h2>
           <p className="text-xs text-luxury-textMuted mt-1">
-            Browse and reserve physical products from premium retail brands. Pick up within 24 hours.
+            {t('shop.sub')}
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export const MallAtoms: React.FC = () => {
             }`}
           >
             <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-            Browse Catalog
+            {t('shop.browse')}
           </button>
           <button
             onClick={() => setActiveTab('reservations')}
@@ -166,7 +166,7 @@ export const MallAtoms: React.FC = () => {
             }`}
           >
             <Ticket className="w-3.5 h-3.5 mr-1.5" />
-            My Reservations ({productBookings.length})
+            {t('shop.myReservations')} ({productBookings.length})
           </button>
         </div>
       </div>
@@ -181,14 +181,14 @@ export const MallAtoms: React.FC = () => {
                 <Car className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-white">Smart Geolocation Pickup Discount Active</h4>
+                <h4 className="font-extrabold text-sm text-white">{t('shop.geoBannerTitle')}</h4>
                 <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                  Park your vehicle in our smart garage! Registering your license plate gets you an immediate <strong className="text-luxury-gold">15% off</strong> on checkout!
+                  {t('shop.geoBannerDesc')}
                 </p>
               </div>
             </div>
             <span className="text-[9px] uppercase font-extrabold tracking-widest text-luxury-gold border border-luxury-gold/25 px-2.5 py-1 rounded bg-black/45">
-              Code: GEO-DISPATCH
+              {t('shop.code')}: GEO-DISPATCH
             </span>
           </div>
 
@@ -199,7 +199,7 @@ export const MallAtoms: React.FC = () => {
               <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
               <input 
                 type="text" 
-                placeholder="Search products or stores..." 
+                placeholder={t('shop.search')} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-luxury-darkBg border border-luxury-darkBorder rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-luxury-gold/50"
@@ -261,16 +261,16 @@ export const MallAtoms: React.FC = () => {
                       {/* Stock Badges */}
                       {isOutOfStock ? (
                         <span className="inline-block px-2 py-0.5 rounded text-[8.5px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/25 uppercase">
-                          Out of Stock
+                          {t('shop.outOfStock')}
                         </span>
                       ) : isLowStock ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 uppercase animate-pulse">
                           <AlertTriangle className="w-3 h-3 mr-0.5 text-amber-400" />
-                          Only {prod.stock} Left
+                          {language === 'en' ? `Only ${prod.stock} Left` : `केवल ${prod.stock} शेष`}
                         </span>
                       ) : (
                         <span className="inline-block px-2 py-0.5 rounded text-[8.5px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 uppercase">
-                          {prod.stock} Available
+                          {prod.stock} {t('shop.stock')}
                         </span>
                       )}
                     </div>
@@ -291,7 +291,7 @@ export const MallAtoms: React.FC = () => {
                         : 'bg-luxury-darkCard border border-luxury-darkBorder text-luxury-gold hover:bg-luxury-gold hover:text-black hover:shadow-gold-glow'
                     }`}
                   >
-                    <span>Reserve Online</span>
+                    <span>{t('shop.reserveBtn')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

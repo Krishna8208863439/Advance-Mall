@@ -3,7 +3,7 @@ import { useMall } from '../../context/MallContext';
 import { Users, CheckSquare, Clock, Plus, CreditCard, DollarSign, X, CheckCircle, Receipt } from 'lucide-react';
 
 export const AttendanceLogger: React.FC = () => {
-  const { attendance, updateAttendance, addStaffMember, payroll, releaseSalary } = useMall();
+  const { attendance, updateAttendance, addStaffMember, payroll, releaseSalary, language } = useMall();
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'attendance' | 'payroll'>('attendance');
@@ -114,10 +114,12 @@ export const AttendanceLogger: React.FC = () => {
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center">
             <Users className="w-5 h-5 text-luxury-gold mr-2" />
-            Staff Management & Payroll Hub
+            {language === 'en' ? 'Staff Management & Payroll Hub' : 'स्टाफ प्रबंधन और पेरोल हब'}
           </h2>
           <p className="text-xs text-luxury-textMuted mt-1">
-            Perform shifts audits, onboard new internal crew members, and process salaries payouts.
+            {language === 'en' 
+              ? 'Perform shifts audits, onboard new internal crew members, and process salaries payouts.'
+              : 'उपस्थिति ऑडिट करें, नए स्टाफ सदस्यों को जोड़ें, और वेतन भुगतान संसाधित करें।'}
           </p>
         </div>
 
@@ -132,7 +134,7 @@ export const AttendanceLogger: React.FC = () => {
             }`}
           >
             <Users className="w-3.5 h-3.5 mr-1.5" />
-            Shift Roster
+            {language === 'en' ? 'Shift Roster' : 'उपस्थिति सूची'}
           </button>
           <button
             onClick={() => setActiveTab('payroll')}
@@ -143,7 +145,7 @@ export const AttendanceLogger: React.FC = () => {
             }`}
           >
             <CreditCard className="w-3.5 h-3.5 mr-1.5" />
-            Payroll Ledger
+            {language === 'en' ? 'Payroll Ledger' : 'पेरोल खाता'}
           </button>
         </div>
       </div>

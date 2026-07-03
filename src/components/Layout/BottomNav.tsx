@@ -1,4 +1,5 @@
 import React from 'react';
+import { useMall } from '../../context/MallContext';
 import { 
   Home, 
   Store, 
@@ -24,22 +25,24 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   activeSection,
   setActiveSection,
 }) => {
+  const { t } = useMall();
+
   const visitorMenu = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'directory', label: 'Directory', icon: Store },
-    { id: 'map', label: 'Map', icon: Map },
-    { id: 'offers', label: 'Offers', icon: Tag },
-    { id: 'concierge', label: 'VIP', icon: Sparkles },
-    { id: 'mallatoms', label: 'Booking', icon: ShoppingBag },
+    { id: 'home', label: t('nav.home'), icon: Home },
+    { id: 'directory', label: t('nav.directory'), icon: Store },
+    { id: 'map', label: t('nav.map'), icon: Map },
+    { id: 'offers', label: t('nav.offers'), icon: Tag },
+    { id: 'concierge', label: t('nav.concierge'), icon: Sparkles },
+    { id: 'mallatoms', label: t('nav.mallatoms'), icon: ShoppingBag },
   ];
 
   const adminMenu = [
-    { id: 'tenants', label: 'Tenants', icon: Grid },
-    { id: 'cctv', label: 'CCTV', icon: Video },
-    { id: 'parking', label: 'Parking', icon: Car },
-    { id: 'attendance', label: 'Staff', icon: Users },
-    { id: 'heatmap', label: 'Heatmap', icon: Map },
-    { id: 'history', label: 'History', icon: History },
+    { id: 'tenants', label: t('nav.tenants'), icon: Grid },
+    { id: 'cctv', label: t('nav.cctv'), icon: Video },
+    { id: 'parking', label: t('nav.parking'), icon: Car },
+    { id: 'attendance', label: t('nav.attendance'), icon: Users },
+    { id: 'heatmap', label: t('nav.heatmap'), icon: Map },
+    { id: 'history', label: t('nav.history'), icon: History },
   ];
 
   const currentMenu = isAdmin ? adminMenu : visitorMenu;
@@ -62,7 +65,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               <span className="absolute -top-1 w-5 h-1 bg-luxury-gold rounded-full animate-pulse" />
             )}
             <Icon className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-semibold tracking-wider">{item.label}</span>
+            <span className="text-[9px] font-semibold tracking-wider text-center truncate w-full">{item.label}</span>
           </button>
         );
       })}

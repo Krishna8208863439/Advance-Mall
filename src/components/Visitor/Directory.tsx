@@ -37,7 +37,7 @@ const isStoreOpen = (hoursStr: string): boolean => {
 };
 
 export const Directory: React.FC = () => {
-  const { stores, savedCoupons, toggleSaveCoupon } = useMall();
+  const { stores, savedCoupons, toggleSaveCoupon, language, t } = useMall();
   
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +52,30 @@ export const Directory: React.FC = () => {
     'Food & Dine', 'Entertainment', 'Home & Lifestyle', 'Hypermarket', 
     'Jewellery', 'Kids Care', 'Watches'
   ];
+
+  const translateCategory = (cat: string) => {
+    if (language === 'hi') {
+      const map: Record<string, string> = {
+        'All Types': 'सभी श्रेणियां',
+        'Automobile': 'ऑटोमोबाइल',
+        'Bags & Accessories': 'बैग और सहायक उपकरण',
+        'Beauty & Skincare': 'सुंदरता और त्वचा की देखभाल',
+        'Denims & Casuals': 'डेनिम और कैजुअल',
+        'Electronics': 'इलेक्ट्रॉनिक्स',
+        'Ethnicwear': 'पारंपरिक परिधान',
+        'Eyewear': 'चश्मा और लेंस',
+        'Food & Dine': 'भोजन और रेस्तरां',
+        'Entertainment': 'मनोरंजन',
+        'Home & Lifestyle': 'होम और लाइफस्टाइल',
+        'Hypermarket': 'हाइपरमार्केट',
+        'Jewellery': 'आभूषण',
+        'Kids Care': 'बच्चों की देखभाल',
+        'Watches': 'घड़ियाँ'
+      };
+      return map[cat] || cat;
+    }
+    return cat;
+  };
 
   // Filters application
   const filteredStores = useMemo(() => {
@@ -69,8 +93,6 @@ export const Directory: React.FC = () => {
     });
   }, [stores, searchTerm, selectedCategory]);
 
-  // Reset page when filters change is now handled event-driven in onChange/onClick handlers.
-
   // Pagination calculation
   const totalPages = Math.ceil(filteredStores.length / itemsPerPage) || 1;
   const paginatedStores = useMemo(() => {
@@ -86,16 +108,31 @@ export const Directory: React.FC = () => {
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
+  const translateFloor = (floor: string) => {
+    if (language === 'hi') {
+      const map: Record<string, string> = {
+        'Lower Ground': 'लोअर ग्राउंड',
+        'Ground': 'ग्राउंड फ्लोर',
+        'First': 'प्रथम तल',
+        'Second': 'द्वितीय तल'
+      };
+      return map[floor] || floor;
+    }
+    return floor;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header and Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white">
-            Brand Directory
+            {t('dir.title')}
           </h2>
           <p className="text-xs text-luxury-textMuted mt-1">
-            Search and locate {stores.length} premium brands across Amanora Plaza
+            {language === 'en' 
+              ? `Search and locate ${stores.length} premium brands across Amanora Plaza`
+              : `अमनोरा प्लाजा में ${stores.length} प्रीमियम ब्रांडों को खोजें और ढूंढें`}
           </p>
         </div>
 
@@ -104,7 +141,7 @@ export const Directory: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search brand, category, or room..."
+            placeholder={language === 'en' ? 'Search brand, category, or room...' : 'ब्रांड, श्रेणी या रूम नंबर खोजें...'}
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -130,7 +167,7 @@ export const Directory: React.FC = () => {
                 : 'bg-luxury-darkCard/60 border-luxury-darkBorder text-slate-300 hover:border-luxury-gold/30 hover:text-slate-100'
             }`}
           >
-            {cat}
+            {translateCategory(cat)}
           </button>
         ))}
       </div>
@@ -157,18 +194,18 @@ export const Directory: React.FC = () => {
                       </h3>
                       <div className="flex items-center space-x-1.5 mt-0.5">
                         <span className="text-[10px] uppercase font-bold tracking-widest text-luxury-gold">
-                          {store.category}
+                          {translateCategory(store.category)}
                         </span>
                         <span className="w-1 h-1 rounded-full bg-slate-600" />
                         {isStoreOpen(store.hours) ? (
                           <span className="flex items-center text-[9px] text-luxury-emerald font-extrabold tracking-wider uppercase">
                             <span className="w-1 h-1 bg-luxury-emerald rounded-full mr-1 animate-pulse" />
-                            Open
+                            {language === 'en' ? 'Open' : 'खुला है'}
                           </span>
                         ) : (
                           <span className="flex items-center text-[9px] text-luxury-rose font-extrabold tracking-wider uppercase">
                             <span className="w-1 h-1 bg-luxury-rose rounded-full mr-1" />
-                            Closed
+                            {language === 'en' ? 'Closed' : 'बंद है'}
                           </span>
                         )}
                       </div>
@@ -177,7 +214,7 @@ export const Directory: React.FC = () => {
 
                   {/* Floor and Location Badge */}
                   <span className="text-[9px] font-extrabold uppercase bg-luxury-darkBorder px-2.5 py-0.8 rounded text-slate-300 border border-luxury-darkBorder/40">
-                    Room {store.roomNumber} • {store.floor}
+                    {language === 'en' ? 'Room' : 'कमरा'} {store.roomNumber} • {translateFloor(store.floor)}
                   </span>
                 </div>
 
@@ -205,7 +242,7 @@ export const Directory: React.FC = () => {
                   <div className="flex items-center justify-between bg-luxury-darkBg/60 px-3 py-1.5 rounded-lg border border-luxury-darkBorder/40">
                     <div className="flex items-center space-x-1.5">
                       <Tag className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-                      <span className="text-[10px] font-extrabold text-slate-200 truncate max-w-[150px]">
+                      <span className="text-[10px] font-extrabold text-slate-200 truncate max-w-[180px]">
                         {store.offers[0].title}
                       </span>
                     </div>
@@ -223,7 +260,9 @@ export const Directory: React.FC = () => {
                   </div>
                 ) : (
                   <div className="h-8 flex items-center justify-center border border-dashed border-luxury-darkBorder/40 rounded-lg">
-                    <span className="text-[9px] text-slate-500 uppercase tracking-widest">No active offers</span>
+                    <span className="text-[9px] text-slate-500 uppercase tracking-widest">
+                      {language === 'en' ? 'No active offers' : 'कोई सक्रिय ऑफ़र नहीं'}
+                    </span>
                   </div>
                 )}
               </div>
@@ -233,9 +272,13 @@ export const Directory: React.FC = () => {
       ) : (
         <div className="flex flex-col items-center justify-center py-12 border border-dashed border-luxury-darkBorder rounded-2xl glass-panel text-center">
           <span className="text-3xl mb-2">🔍</span>
-          <h3 className="font-extrabold text-slate-200">No stores found</h3>
+          <h3 className="font-extrabold text-slate-200">
+            {language === 'en' ? 'No stores found' : 'कोई दुकान नहीं मिली'}
+          </h3>
           <p className="text-xs text-slate-500 mt-1 max-w-xs">
-            We couldn't find any brands matching "{searchTerm}" or under the category "{selectedCategory}".
+            {language === 'en'
+              ? `We couldn't find any brands matching "${searchTerm}" or under the category "${translateCategory(selectedCategory)}".`
+              : `हमें "${searchTerm}" नाम से या "${translateCategory(selectedCategory)}" श्रेणी में कोई ब्रांड नहीं मिला।`}
           </p>
         </div>
       )}
@@ -244,7 +287,9 @@ export const Directory: React.FC = () => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-luxury-darkBorder">
           <p className="text-xs text-slate-400 font-medium">
-            Showing Page <span className="text-luxury-gold font-bold">{currentPage}</span> of <span className="text-slate-200 font-bold">{totalPages}</span>
+            {language === 'en' 
+              ? <>Showing Page <span className="text-luxury-gold font-bold">{currentPage}</span> of <span className="text-slate-200 font-bold">{totalPages}</span></>
+              : <>पृष्ठ <span className="text-luxury-gold font-bold">{currentPage}</span> (कुल <span className="text-slate-200 font-bold">{totalPages}</span> में से) प्रदर्शित</>}
           </p>
           <div className="flex space-x-2">
             <button
