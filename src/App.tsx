@@ -10,12 +10,14 @@ import { Directory } from './components/Visitor/Directory';
 import { FloorMap } from './components/Visitor/FloorMap';
 import { OffersHub } from './components/Visitor/OffersHub';
 import { VipConcierge } from './components/Visitor/VipConcierge';
+import { MallAtoms } from './components/Visitor/MallAtoms';
 
 // Admin Sections
 import { TenantManager } from './components/Admin/TenantManager';
 import { CCTVControl } from './components/Admin/CCTVControl';
 import { SmartParking } from './components/Admin/SmartParking';
 import { AttendanceLogger } from './components/Admin/AttendanceLogger';
+import { SystemHistory } from './components/Admin/SystemHistory';
 
 const MainLayout: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -35,6 +37,8 @@ const MainLayout: React.FC = () => {
           return <AttendanceLogger />;
         case 'heatmap':
           return <FloorMap isAdminView={true} />;
+        case 'history':
+          return <SystemHistory />;
         default:
           return <TenantManager />;
       }
@@ -50,6 +54,8 @@ const MainLayout: React.FC = () => {
           return <OffersHub />;
         case 'concierge':
           return <VipConcierge />;
+        case 'mallatoms':
+          return <MallAtoms />;
         default:
           return <HeroSection />;
       }

@@ -47,7 +47,59 @@ export interface Employee {
   role: 'Security' | 'Maintenance' | 'Administration' | 'Customer Desk';
   status: 'Present' | 'Absent' | 'Late';
   clockInTime: string; // HH:MM AM/PM or "--"
+  department: string;
+  salary: number;
+  bankAccount: string;
 }
+
+export interface PayrollPayout {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  month: string;
+  amount: number;
+  status: 'Pending' | 'Paid';
+  transactionRef?: string;
+  timestamp?: string;
+  payoutMethod?: 'Razorpay Payouts' | 'Manual Bank';
+}
+
+export interface ActivityLog {
+  id: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  userType: 'Admin' | 'Visitor';
+}
+
+export interface MallProduct {
+  id: string;
+  storeId: string;
+  storeName: string;
+  name: string;
+  price: number;
+  stock: number;
+  category: string;
+  imageUrl?: string;
+}
+
+export interface ProductBooking {
+  id: string;
+  productId: string;
+  productName: string;
+  storeId: string;
+  storeName: string;
+  customerName: string;
+  quantity: number;
+  total: number;
+  discount: number;
+  status: 'Reserved' | 'Picked Up' | 'Cancelled';
+  isGeoDiscount: boolean;
+  timestamp: string;
+  paymentId?: string;
+  paymentMethod?: 'Razorpay' | 'In-Store';
+}
+
 
 export interface Announcement {
   id: string;
@@ -80,6 +132,7 @@ export interface VipReservation {
   ticketCount: number;
   seatType: string;
   timestamp: string;
+  paymentId?: string;
 }
 
 export interface FoodCartItem {
@@ -95,6 +148,7 @@ export interface FoodCourtOrder {
   total: number;
   status: 'Cooking' | 'Ready' | 'Picked Up';
   timestamp: string;
+  paymentId?: string;
 }
 
 export interface TableReservation {
@@ -119,6 +173,10 @@ interface MallContextType {
   foodCourtCart: FoodCartItem[];
   foodCourtOrders: FoodCourtOrder[];
   tableReservations: TableReservation[];
+  payroll: PayrollPayout[];
+  activityLogs: ActivityLog[];
+  products: MallProduct[];
+  productBookings: ProductBooking[];
   onboardTenant: (tenantData: Omit<Tenant, 'floor'>) => void;
   togglePaymentStatus: (roomNumber: number) => void;
   registerVehicle: (vehicle: Omit<VehicleLog, 'timeIn'>) => boolean;
@@ -128,14 +186,19 @@ interface MallContextType {
   exportRevenueSummary: () => string;
   bookEvSlot: (bayId: string, licensePlate: string, timeSlot: string) => boolean;
   requestValetDelivery: (storeId: string, valetId: string, location: string) => void;
-  bookVipEvent: (eventId: string, userName: string, ticketCount: number, seatType: string) => void;
+  bookVipEvent: (eventId: string, userName: string, ticketCount: number, seatType: string, paymentId?: string) => void;
   addToFoodCart: (item: Omit<FoodCartItem, 'qty'>) => void;
   removeFromFoodCart: (name: string, restaurant: string) => void;
   clearFoodCart: () => void;
-  checkoutFoodCart: () => void;
+  checkoutFoodCart: (paymentId?: string) => void;
   bookTableWithPreorder: (restaurantId: string, guests: number, timeSlot: string, preorders: FoodCartItem[]) => void;
   updateHandsFreeStatus: (id: string, status: HandsFreeDelivery['status']) => void;
   updateFoodOrderStatus: (id: string, status: FoodCourtOrder['status']) => void;
+  addStaffMember: (staff: Omit<Employee, 'status' | 'clockInTime'>) => void;
+  releaseSalary: (employeeId: string, month: string, payoutMethod?: 'Razorpay Payouts' | 'Manual Bank') => string;
+  addActivityLog: (action: string, details: string, userType: 'Admin' | 'Visitor') => void;
+  reserveProduct: (productId: string, qty: number, customerName: string, licensePlate?: string, paymentId?: string, paymentMethod?: 'Razorpay' | 'In-Store') => { success: boolean; error?: string; booking?: ProductBooking };
+  pickupBooking: (bookingId: string) => void;
 }
 
 const MallContext = createContext<MallContextType | undefined>(undefined);
@@ -353,18 +416,38 @@ const initialParkingLogs: VehicleLog[] = [
 ];
 
 const initialAttendance: Employee[] = [
-  { id: 'emp_1', name: 'Shankar Patil', role: 'Security', status: 'Present', clockInTime: '08:00 AM' },
-  { id: 'emp_2', name: 'Amol Shinde', role: 'Security', status: 'Present', clockInTime: '08:15 AM' },
-  { id: 'emp_3', name: 'Sunita Gavade', role: 'Customer Desk', status: 'Present', clockInTime: '09:00 AM' },
-  { id: 'emp_4', name: 'Ramesh Sawant', role: 'Maintenance', status: 'Present', clockInTime: '08:30 AM' },
-  { id: 'emp_5', name: 'Pradip Joshi', role: 'Administration', status: 'Absent', clockInTime: '--' },
-  { id: 'emp_6', name: 'Vikram Phalke', role: 'Security', status: 'Late', clockInTime: '09:45 AM' }
+  { id: 'emp_1', name: 'Shankar Patil', role: 'Security', status: 'Present', clockInTime: '08:00 AM', department: 'Security Services', salary: 25000, bankAccount: 'SBI-99887766' },
+  { id: 'emp_2', name: 'Amol Shinde', role: 'Security', status: 'Present', clockInTime: '08:15 AM', department: 'Security Services', salary: 25000, bankAccount: 'HDFC-11223344' },
+  { id: 'emp_3', name: 'Sunita Gavade', role: 'Customer Desk', status: 'Present', clockInTime: '09:00 AM', department: 'Administration', salary: 35000, bankAccount: 'ICICI-44556677' },
+  { id: 'emp_4', name: 'Ramesh Sawant', role: 'Maintenance', status: 'Present', clockInTime: '08:30 AM', department: 'Facilities', salary: 22000, bankAccount: 'AXIS-55667788' },
+  { id: 'emp_5', name: 'Pradip Joshi', role: 'Administration', status: 'Absent', clockInTime: '--', department: 'Operations & HR', salary: 50000, bankAccount: 'KOTAK-66778899' },
+  { id: 'emp_6', name: 'Vikram Phalke', role: 'Security', status: 'Late', clockInTime: '09:45 AM', department: 'Security Services', salary: 25000, bankAccount: 'SBI-88776655' }
 ];
 
 const initialAnnouncements: Announcement[] = [
   { id: 'ann_1', title: 'Luxury Gold Souk Fest', content: 'Enjoy zero making charges and specialized bridal showcases in the Ground Floor atrium.', tag: 'Event' },
   { id: 'ann_2', title: 'Valet Parking Upgraded', content: 'Free EV fast chargers are now live at Parking Basement A for all premium shopping cardholders.', tag: 'Alert' },
   { id: 'ann_3', title: 'Viman Nagar Luxury Runway', content: 'Catch the haute couture exhibition this weekend, starting 5:00 PM at Central Plaza.', tag: 'Event' }
+];
+
+const initialProducts: MallProduct[] = [
+  { id: 'p1', storeId: 's1', storeName: 'Spar Luxury Hypermarket', name: 'Organic Quinoa 1kg', price: 450, stock: 15, category: 'Groceries' },
+  { id: 'p2', storeId: 's1', storeName: 'Spar Luxury Hypermarket', name: 'Avocado Pack of 2', price: 300, stock: 8, category: 'Groceries' },
+  { id: 'p3', storeId: 's1', storeName: 'Spar Luxury Hypermarket', name: 'Premium Aged Basmati Rice 5kg', price: 950, stock: 20, category: 'Groceries' },
+  { id: 'p4', storeId: 's2', storeName: 'Ray-Ban & Sunglass Hut', name: 'Ray-Ban Classic Wayfarer', price: 8900, stock: 5, category: 'Eyewear' },
+  { id: 'p5', storeId: 's2', storeName: 'Ray-Ban & Sunglass Hut', name: 'Oakley Radar EV Path', price: 12500, stock: 3, category: 'Eyewear' },
+  { id: 'p6', storeId: 's3', storeName: 'Manyavar & Mohey', name: 'Royal Sherwani Set Gold', price: 18500, stock: 4, category: 'Ethnicwear' },
+  { id: 'p7', storeId: 's3', storeName: 'Manyavar & Mohey', name: 'Mohey Silk Lehenga Red', price: 24000, stock: 2, category: 'Ethnicwear' },
+  { id: 'p8', storeId: 's4', storeName: 'Chanel Beauté', name: 'Bleu de Chanel Parfum 100ml', price: 14500, stock: 6, category: 'Beauty & Skincare' },
+  { id: 'p9', storeId: 's4', storeName: 'Chanel Beauté', name: 'Chanel Rouge Allure Lipstick', price: 3800, stock: 12, category: 'Beauty & Skincare' },
+  { id: 'p10', storeId: 's5', storeName: 'Tanishq Elite', name: 'Diamond Studded Gold Pendant', price: 45000, stock: 2, category: 'Jewellery' },
+  { id: 'p11', storeId: 's7', storeName: 'Rolex Boutique', name: 'Rolex Submariner Date Steel', price: 850000, stock: 1, category: 'Watches' },
+  { id: 'p12', storeId: 's7', storeName: 'Rolex Boutique', name: 'Role Oyster Perpetual 36', price: 540000, stock: 1, category: 'Watches' },
+  { id: 'p13', storeId: 's8', storeName: 'Apple Store (Imagine)', name: 'iPhone 15 Pro Max 256GB', price: 159900, stock: 10, category: 'Electronics' },
+  { id: 'p14', storeId: 's8', storeName: 'Apple Store (Imagine)', name: 'MacBook Air M3 13-inch', price: 114900, stock: 7, category: 'Electronics' },
+  { id: 'p15', storeId: 's8', storeName: 'Apple Store (Imagine)', name: 'AirPods Pro Gen 2', price: 24900, stock: 15, category: 'Electronics' },
+  { id: 'p16', storeId: 's9', storeName: 'Louis Vuitton Paris', name: 'LV Neverfull MM Damier', price: 175000, stock: 3, category: 'Bags & Accessories' },
+  { id: 'p17', storeId: 's9', storeName: 'Louis Vuitton Paris', name: 'LV Speedy 30 Monogram', price: 140000, stock: 2, category: 'Bags & Accessories' }
 ];
 
 export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -450,6 +533,36 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return cached ? JSON.parse(cached) : [];
   });
 
+  const [payroll, setPayroll] = useState<PayrollPayout[]>(() => {
+    const cached = localStorage.getItem('amanora_payroll');
+    return cached ? JSON.parse(cached) : [
+      { id: 'pay_1', employeeId: 'emp_1', employeeName: 'Shankar Patil', month: 'June 2026', amount: 25000, status: 'Paid', transactionRef: 'TXN-998877665544', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'pay_2', employeeId: 'emp_2', employeeName: 'Amol Shinde', month: 'June 2026', amount: 25000, status: 'Paid', transactionRef: 'TXN-112233445566', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'pay_3', employeeId: 'emp_3', employeeName: 'Sunita Gavade', month: 'June 2026', amount: 35000, status: 'Paid', transactionRef: 'TXN-445566778899', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'pay_4', employeeId: 'emp_4', employeeName: 'Ramesh Sawant', month: 'June 2026', amount: 22000, status: 'Paid', transactionRef: 'TXN-556677889900', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'pay_5', employeeId: 'emp_6', employeeName: 'Vikram Phalke', month: 'June 2026', amount: 25000, status: 'Paid', transactionRef: 'TXN-887766554433', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() }
+    ];
+  });
+
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
+    const cached = localStorage.getItem('amanora_logs');
+    return cached ? JSON.parse(cached) : [
+      { id: 'log_1', action: 'System Setup', details: 'Smart Mall system loaded with standard seed databases.', timestamp: new Date(Date.now() - 3600000 * 12).toISOString(), userType: 'Admin' },
+      { id: 'log_2', action: 'Lease Paid', details: 'Tenant in Unit #5 (Spar Luxury Hypermarket) processed monthly rent payment.', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), userType: 'Admin' },
+      { id: 'log_3', action: 'EV Booking', details: 'EV Bay reservation created for plate MH-12-RS-9988.', timestamp: new Date(Date.now() - 3600000 * 2.5).toISOString(), userType: 'Visitor' }
+    ];
+  });
+
+  const [products, setProducts] = useState<MallProduct[]>(() => {
+    const cached = localStorage.getItem('amanora_products');
+    return cached ? JSON.parse(cached) : initialProducts;
+  });
+
+  const [productBookings, setProductBookings] = useState<ProductBooking[]>(() => {
+    const cached = localStorage.getItem('amanora_product_bookings');
+    return cached ? JSON.parse(cached) : [];
+  });
+
   // Sync to Local Storage
   useEffect(() => {
     localStorage.setItem('amanora_stores', JSON.stringify(stores));
@@ -492,10 +605,37 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [foodCourtOrders]);
 
   useEffect(() => {
+    localStorage.setItem('amanora_payroll', JSON.stringify(payroll));
+  }, [payroll]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_logs', JSON.stringify(activityLogs));
+  }, [activityLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('amanora_product_bookings', JSON.stringify(productBookings));
+  }, [productBookings]);
+
+  useEffect(() => {
     localStorage.setItem('amanora_table_res', JSON.stringify(tableReservations));
   }, [tableReservations]);
 
   // Operations
+  const addActivityLog = (action: string, details: string, userType: 'Admin' | 'Visitor') => {
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      userType
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+  };
+
   const onboardTenant = (tenantData: Omit<Tenant, 'floor'>) => {
     const floor = getFloorByRoom(tenantData.roomNumber);
     const updatedTenant: Tenant = { ...tenantData, floor };
@@ -525,9 +665,11 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return [...prev, newStoreInfo];
         }
       });
+      addActivityLog('Tenant Onboarded', `Tenant ${tenantData.tenantName} onboarded to Room #${tenantData.roomNumber} (${tenantData.shopName})`, 'Admin');
     } else {
       // If setting to vacant, remove corresponding store in the directory
       setStores(prev => prev.filter(s => s.roomNumber !== tenantData.roomNumber));
+      addActivityLog('Tenant Evicted', `Tenant removed from Room #${tenantData.roomNumber}, space set to Vacant.`, 'Admin');
     }
   };
 
@@ -538,6 +680,7 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (r.paymentStatus === 'Paid') nextStatus = 'Pending';
         else if (r.paymentStatus === 'Pending') nextStatus = 'Overdue';
         else nextStatus = 'Paid';
+        addActivityLog('Rent Payment Status', `Rent status for room #${roomNumber} (${r.shopName}) updated to ${nextStatus}`, 'Admin');
         return { ...r, paymentStatus: nextStatus };
       }
       return r;
@@ -557,11 +700,13 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timeIn: new Date().toISOString()
     };
     setParkingLogs(prev => [newLog, ...prev]);
+    addActivityLog('Vehicle Registered', `Vehicle ${vehicle.licensePlate} registered in parking slot ${vehicle.slotAllocation}.`, 'Admin');
     return true;
   };
 
   const checkoutVehicle = (licensePlate: string) => {
     setParkingLogs(prev => prev.filter(log => log.licensePlate.toLowerCase() !== licensePlate.toLowerCase()));
+    addActivityLog('Vehicle Checkout', `Vehicle with plate ${licensePlate} checked out from parking.`, 'Admin');
   };
 
   const updateAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'Late') => {
@@ -577,6 +722,7 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const minutes = now.getMinutes().toString().padStart(2, '0');
           clockIn = `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
         }
+        addActivityLog('Attendance Update', `Staff member ${emp.name} marked ${status} (Clock-in: ${clockIn}).`, 'Admin');
         return { ...emp, status, clockInTime: clockIn };
       }
       return emp;
@@ -634,6 +780,7 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'Active'
     };
     setEvReservations(prev => [newReservation, ...prev]);
+    addActivityLog('EV Bay Reserved', `EV Charging Bay ${bayId} reserved for vehicle ${licensePlate.toUpperCase()} (${timeSlot}).`, 'Visitor');
     return true;
   };
 
@@ -647,18 +794,24 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestamp: new Date().toISOString()
     };
     setHandsFreeDeliveries(prev => [newDelivery, ...prev]);
+    addActivityLog('Valet Pick Up', `Hands-Free valet delivery requested for valet ID ${valetId} at location ${location}.`, 'Visitor');
   };
 
-  const bookVipEvent = (eventId: string, userName: string, ticketCount: number, seatType: string) => {
+  const bookVipEvent = (eventId: string, userName: string, ticketCount: number, seatType: string, paymentId?: string) => {
     const newReservation: VipReservation = {
       id: `vip_res_${Date.now()}`,
       eventId,
       userName,
       ticketCount,
       seatType,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      paymentId
     };
     setVipReservations(prev => [newReservation, ...prev]);
+    const logDetails = paymentId 
+      ? `${userName} reserved ${ticketCount} ${seatType} seats for event ID ${eventId}. Paid via Razorpay (ID: ${paymentId}).`
+      : `${userName} reserved ${ticketCount} ${seatType} seats for event ID ${eventId}.`;
+    addActivityLog('VIP Event Reserved', logDetails, 'Visitor');
   };
 
   const addToFoodCart = (item: Omit<FoodCartItem, 'qty'>) => {
@@ -700,7 +853,7 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setFoodCourtCart([]);
   };
 
-  const checkoutFoodCart = () => {
+  const checkoutFoodCart = (paymentId?: string) => {
     if (foodCourtCart.length === 0) return;
     const total = foodCourtCart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const newOrder: FoodCourtOrder = {
@@ -708,10 +861,15 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       items: [...foodCourtCart],
       total,
       status: 'Cooking',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      paymentId
     };
     setFoodCourtOrders(prev => [newOrder, ...prev]);
     setFoodCourtCart([]);
+    const logDetails = paymentId
+      ? `Visitor checked out Food Court cart. Order ID ${newOrder.id} generated for ₹${total.toLocaleString()}. Paid via Razorpay (ID: ${paymentId}).`
+      : `Visitor checked out Food Court cart. Order ID ${newOrder.id} generated for ₹${total.toLocaleString()}.`;
+    addActivityLog('Food Order Placed', logDetails, 'Visitor');
   };
 
   const bookTableWithPreorder = (restaurantId: string, guests: number, timeSlot: string, preorders: FoodCartItem[]) => {
@@ -724,14 +882,117 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestamp: new Date().toISOString()
     };
     setTableReservations(prev => [newRes, ...prev]);
+    addActivityLog('Table Reservation', `Restaurant table reservation created for ${guests} guests at time ${timeSlot}.`, 'Visitor');
   };
 
   const updateHandsFreeStatus = (id: string, status: HandsFreeDelivery['status']) => {
     setHandsFreeDeliveries(prev => prev.map(d => d.id === id ? { ...d, status } : d));
+    addActivityLog('Hands-Free Delivery Status', `Valet Delivery #${id} updated to ${status}.`, 'Admin');
   };
 
   const updateFoodOrderStatus = (id: string, status: FoodCourtOrder['status']) => {
     setFoodCourtOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    addActivityLog('Food Order Status', `Food Court Order #${id} updated to ${status}.`, 'Admin');
+  };
+
+  const addStaffMember = (staff: Omit<Employee, 'status' | 'clockInTime'>) => {
+    const newEmp: Employee = {
+      ...staff,
+      status: 'Absent',
+      clockInTime: '--'
+    };
+    setAttendance(prev => [...prev, newEmp]);
+    addActivityLog('Add Staff Member', `Added new staff member ${staff.name} (Role: ${staff.role}, Department: ${staff.department}, Base Salary: ₹${staff.salary.toLocaleString()})`, 'Admin');
+  };
+
+  const releaseSalary = (employeeId: string, month: string, payoutMethod: 'Razorpay Payouts' | 'Manual Bank' = 'Manual Bank'): string => {
+    const emp = attendance.find(e => e.id === employeeId);
+    if (!emp) return '';
+    const txnRef = payoutMethod === 'Razorpay Payouts' 
+      ? `RPAY-OUT-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`
+      : `TXN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const payout: PayrollPayout = {
+      id: `pay_${Date.now()}`,
+      employeeId,
+      employeeName: emp.name,
+      month,
+      amount: emp.salary,
+      status: 'Paid',
+      transactionRef: txnRef,
+      timestamp: new Date().toISOString(),
+      payoutMethod
+    };
+    setPayroll(prev => [payout, ...prev]);
+    const details = `Released salary of ₹${emp.salary.toLocaleString()} for ${emp.name} (${month}) via ${payoutMethod}. Ref: ${txnRef}`;
+    addActivityLog('Payroll Released', details, 'Admin');
+    return txnRef;
+  };
+
+  const reserveProduct = (
+    productId: string, 
+    qty: number, 
+    customerName: string, 
+    licensePlate?: string, 
+    paymentId?: string, 
+    paymentMethod: 'Razorpay' | 'In-Store' = 'In-Store'
+  ) => {
+    const prod = products.find(p => p.id === productId);
+    if (!prod) return { success: false, error: 'Product not found' };
+    if (prod.stock < qty) return { success: false, error: 'Insufficient stock available' };
+
+    // Check Geolocation Discount condition (is their vehicle registered in the parking lot)
+    let isGeoDiscount = false;
+    if (licensePlate) {
+      const formattedPlate = licensePlate.trim().toLowerCase();
+      isGeoDiscount = parkingLogs.some(log => log.licensePlate.toLowerCase() === formattedPlate);
+    }
+
+    // Prepay online grants an extra 10% discount on top of geolocation discount!
+    let discountMultiplier = 1.0;
+    if (isGeoDiscount) discountMultiplier -= 0.15;
+    if (paymentMethod === 'Razorpay') discountMultiplier -= 0.10;
+
+    const pricePerUnit = prod.price * discountMultiplier;
+    const totalAmount = pricePerUnit * qty;
+    const discountApplied = (prod.price - pricePerUnit) * qty;
+
+    const booking: ProductBooking = {
+      id: `res_${Date.now()}`,
+      productId,
+      productName: prod.name,
+      storeId: prod.storeId,
+      storeName: prod.storeName,
+      customerName,
+      quantity: qty,
+      total: totalAmount,
+      discount: discountApplied,
+      status: 'Reserved',
+      isGeoDiscount,
+      timestamp: new Date().toISOString(),
+      paymentId,
+      paymentMethod
+    };
+
+    // Decrement stock
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: p.stock - qty } : p));
+    setProductBookings(prev => [booking, ...prev]);
+    
+    const details = paymentMethod === 'Razorpay'
+      ? `Visitor ${customerName} pre-paid and reserved ${qty}x ${prod.name} from ${prod.storeName} via Razorpay (ID: ${paymentId}). Discount: ₹${discountApplied.toLocaleString()}.`
+      : `Visitor ${customerName} reserved ${qty}x ${prod.name} from ${prod.storeName} (Hold in-store). Discount: ₹${discountApplied.toLocaleString()}.`;
+    addActivityLog('Product Reserved', details, 'Visitor');
+
+    return { success: true, booking };
+  };
+
+  const pickupBooking = (bookingId: string) => {
+    setProductBookings(prev => prev.map(b => {
+      if (b.id === bookingId) {
+        addActivityLog('Product Picked Up', `Reservation #${bookingId} for ${b.customerName} marked as Picked Up.`, 'Admin');
+        return { ...b, status: 'Picked Up' as const };
+      }
+      return b;
+    }));
   };
 
   return (
@@ -748,6 +1009,10 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       foodCourtCart,
       foodCourtOrders,
       tableReservations,
+      payroll,
+      activityLogs,
+      products,
+      productBookings,
       onboardTenant,
       togglePaymentStatus,
       registerVehicle,
@@ -764,7 +1029,12 @@ export const MallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkoutFoodCart,
       bookTableWithPreorder,
       updateHandsFreeStatus,
-      updateFoodOrderStatus
+      updateFoodOrderStatus,
+      addStaffMember,
+      releaseSalary,
+      addActivityLog,
+      reserveProduct,
+      pickupBooking
     }}>
       {children}
     </MallContext.Provider>

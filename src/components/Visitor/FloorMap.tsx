@@ -31,6 +31,8 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
   const { stores, rooms, onboardTenant } = useMall();
   const [selectedFloor, setSelectedFloor] = useState<FloorType>('Ground');
   const [selectedRoom, setSelectedRoom] = useState<number | null>(30); // Default select room 30
+  const [mapMode, setMapMode] = useState<'3d' | '2d'>('3d');
+  const [userLocation, setUserLocation] = useState<number | null>(null);
 
   // Lease Modal State
   const [showLeaseModal, setShowLeaseModal] = useState(false);
@@ -531,6 +533,75 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
     };
   }, [selectedRoom, rooms, stores]);
 
+  const calculatePath = (start: number | null, end: number | null): number[] => {
+    if (!start || !end || start === end) return [];
+    return [start, end];
+  };
+
+  const render2DBlock = (block: Block3D) => {
+    const isSelected = selectedRoom === block.roomNumber;
+    const isHovered = hoveredRoom === block.roomNumber;
+    const isUserLoc = userLocation === block.roomNumber;
+    const isPathNode = calculatePath(userLocation, selectedRoom).includes(block.roomNumber);
+
+    let baseBg = 'bg-luxury-darkCard border-luxury-darkBorder text-slate-400';
+    
+    if (block.isUtility) {
+      if (block.utilityType === 'WC') baseBg = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+      else if (block.utilityType === 'LIFT') baseBg = 'bg-purple-500/10 border-purple-500/30 text-purple-400';
+      else if (block.utilityType === 'ATM') baseBg = 'bg-sky-500/10 border-sky-500/30 text-sky-400';
+      else baseBg = 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'; // Lounge
+    } else if (block.color === '#d4af37') {
+      if (isSelected) {
+        baseBg = 'bg-luxury-gold text-black border-luxury-gold font-bold shadow-gold-glow';
+      } else if (isPathNode) {
+        baseBg = 'bg-luxury-gold/30 border-luxury-gold text-luxury-gold font-bold shadow-[0_0_15px_rgba(212,175,55,0.4)] animate-pulse';
+      } else if (isHovered) {
+        baseBg = 'bg-luxury-gold/20 border-luxury-gold text-luxury-gold';
+      } else {
+        baseBg = 'bg-luxury-gold/10 border-luxury-gold/45 text-luxury-gold';
+      }
+    } else {
+      if (isSelected) {
+        baseBg = 'bg-white text-black border-white';
+      } else if (isPathNode) {
+        baseBg = 'bg-white/20 border-white text-white animate-pulse';
+      } else if (isHovered) {
+        baseBg = 'bg-luxury-darkCard border-slate-400 text-slate-200';
+      } else {
+        baseBg = 'bg-luxury-darkCard/40 border-luxury-darkBorder text-slate-500';
+      }
+    }
+
+    return (
+      <div
+        key={block.id}
+        onClick={() => {
+          if (!block.isUtility) {
+            setSelectedRoom(block.roomNumber);
+          }
+        }}
+        className={`relative p-2 rounded-lg border text-center cursor-pointer transition-all duration-300 flex flex-col justify-between items-center select-none ${baseBg} ${
+          block.isUtility ? 'w-24 h-12 text-[9px]' : 'h-16 text-[9.5px]'
+        }`}
+      >
+        {isUserLoc && (
+          <span className="absolute -top-2 bg-rose-600 text-white font-extrabold text-[8px] px-1.5 py-0.5 rounded shadow-lg border border-white animate-bounce z-20">
+            📍 YOU
+          </span>
+        )}
+
+        <div className="font-mono font-bold text-[8px] opacity-75">
+          {block.isUtility ? block.utilityType : `#${block.roomNumber}`}
+        </div>
+        
+        <div className="font-extrabold truncate max-w-full text-center mt-0.5">
+          {block.name.split(' ')[0]}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
       {/* Header and Controls */}
@@ -547,29 +618,55 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
           </p>
         </div>
 
-        {/* Floor Switcher tabs */}
-        <div className="bg-luxury-darkCard p-1 rounded-lg border border-luxury-darkBorder flex self-start sm:self-auto">
-          {floors.map(f => (
+        <div className="flex flex-wrap gap-2.5 items-center">
+          {/* Map Mode Switcher */}
+          <div className="bg-luxury-darkCard p-1 rounded-lg border border-luxury-darkBorder flex">
             <button
-              key={f}
-              onClick={() => {
-                setSelectedFloor(f);
-                // Select first room of that floor by default
-                const base = f === 'Lower Ground' ? 1 
-                           : f === 'Ground' ? 26
-                           : f === 'First' ? 51
-                           : 76;
-                setSelectedRoom(base);
-              }}
+              onClick={() => setMapMode('3d')}
               className={`px-3 py-1.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider transition-all duration-300 ${
-                selectedFloor === f
+                mapMode === '3d'
                   ? 'bg-luxury-gold text-black shadow-gold-glow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {f}
+              3D View
             </button>
-          ))}
+            <button
+              onClick={() => setMapMode('2d')}
+              className={`px-3 py-1.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider transition-all duration-300 ${
+                mapMode === '2d'
+                  ? 'bg-luxury-gold text-black shadow-gold-glow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              2D Map
+            </button>
+          </div>
+
+          {/* Floor Switcher tabs */}
+          <div className="bg-luxury-darkCard p-1 rounded-lg border border-luxury-darkBorder flex self-start sm:self-auto">
+            {floors.map(f => (
+              <button
+                key={f}
+                onClick={() => {
+                  setSelectedFloor(f);
+                  // Select first room of that floor by default
+                  const base = f === 'Lower Ground' ? 1 
+                             : f === 'Ground' ? 26
+                             : f === 'First' ? 51
+                             : 76;
+                  setSelectedRoom(base);
+                }}
+                className={`px-3 py-1.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider transition-all duration-300 ${
+                  selectedFloor === f
+                    ? 'bg-luxury-gold text-black shadow-gold-glow'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -628,29 +725,101 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
             </div>
           </div>
 
-          {/* Interactive Canvas Viewport */}
-          <div className="flex-1 flex justify-center items-center py-4 cursor-grab active:cursor-grabbing relative overflow-hidden">
-            <div className="absolute top-2 left-2 z-10 bg-luxury-darkBg/80 border border-luxury-darkBorder px-2.5 py-1 rounded text-[9px] monospace text-slate-400 font-bold select-none pointer-events-none">
-              YAW: {Math.round(yaw)}° • PITCH: {Math.round(pitch)}° • SCALE: {Math.round(zoom * 100)}%
-            </div>
+          {/* Interactive Viewport (3D Canvas vs 2D JSX grid) */}
+          <div className="flex-1 flex justify-center items-center py-4 relative overflow-hidden min-h-[380px]">
+            {mapMode === '3d' ? (
+              <>
+                <div className="absolute top-2 left-2 z-10 bg-luxury-darkBg/80 border border-luxury-darkBorder px-2.5 py-1 rounded text-[9px] monospace text-slate-400 font-bold select-none pointer-events-none">
+                  YAW: {Math.round(yaw)}° • PITCH: {Math.round(pitch)}° • SCALE: {Math.round(zoom * 100)}%
+                </div>
 
-            <canvas
-              ref={canvasRef}
-              width={820}
-              height={380}
-              onClick={handleCanvasClick}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              className="w-full max-w-full h-auto block select-none"
-            />
+                <canvas
+                  ref={canvasRef}
+                  width={820}
+                  height={380}
+                  onClick={handleCanvasClick}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  className="w-full max-w-full h-auto block select-none cursor-grab active:cursor-grabbing"
+                />
+              </>
+            ) : (
+              <div className="w-full flex flex-col space-y-4 py-2 select-none animate-fade-in">
+                {/* 2D Info Overlay */}
+                {userLocation && selectedRoom && userLocation !== selectedRoom && (
+                  <div className="bg-luxury-gold/15 border border-luxury-gold/30 rounded-xl p-3 flex items-center justify-between text-xs text-luxury-gold mb-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="animate-pulse">🚶</span>
+                      <span>
+                        <strong>Navigation Active:</strong> Room #{userLocation} to Room #{selectedRoom} (Central Corridor Walkway Route)
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => setUserLocation(null)}
+                      className="text-[10px] underline font-extrabold uppercase hover:text-white"
+                    >
+                      Clear Path
+                    </button>
+                  </div>
+                )}
+
+                {/* Top Row: Shops 1-10 on this floor */}
+                <div className="grid grid-cols-10 gap-2">
+                  {blocks.slice(0, 10).map(block => render2DBlock(block))}
+                </div>
+
+                {/* Middle Walkway & Kiosks & Utilities */}
+                <div className="flex items-stretch justify-between gap-3 bg-luxury-darkBg/60 border border-luxury-darkBorder/40 rounded-xl p-3.5 relative min-h-[90px]">
+                  {/* Left edge utilities: Restrooms & Lift */}
+                  <div className="flex flex-col justify-between gap-2">
+                    {blocks.filter(b => b.isUtility && (b.utilityType === 'WC' || b.utilityType === 'LIFT')).map(block => render2DBlock(block))}
+                  </div>
+
+                  {/* Center Walkway Corridor and Kiosks */}
+                  <div className="flex-1 flex flex-col justify-center items-center relative border-l border-r border-dashed border-luxury-darkBorder/60 px-4">
+                    <div className="absolute top-1 text-[8.5px] uppercase font-bold tracking-widest text-slate-500 font-mono">
+                      MAIN LUXURY BOULEVARD WALKWAY
+                    </div>
+                    
+                    {/* Kiosks inline row */}
+                    <div className="flex space-x-2 mt-4">
+                      {blocks.slice(20, 25).map(block => render2DBlock(block))}
+                    </div>
+                  </div>
+
+                  {/* Right edge utilities: ATM & VIP Lounge */}
+                  <div className="flex flex-col justify-between gap-2">
+                    {blocks.filter(b => b.isUtility && (b.utilityType === 'ATM' || b.utilityType === 'LOUNGE')).map(block => render2DBlock(block))}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Shops 11-20 on this floor */}
+                <div className="grid grid-cols-10 gap-2">
+                  {blocks.slice(10, 20).map(block => render2DBlock(block))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom guide instructions footer */}
-          <div className="text-[10px] text-slate-400 border-t border-luxury-darkBorder/40 pt-2.5 flex items-center space-x-1 bg-luxury-darkCard/25 p-2 rounded-lg">
-            <span className="text-luxury-gold font-bold">Tip:</span>
-            <span>Drag mouse on spatial frame to pivot orientation angle. Select blocks to interact.</span>
+          <div className="text-[10px] text-slate-400 border-t border-luxury-darkBorder/40 pt-2.5 flex items-center justify-between bg-luxury-darkCard/25 p-2 rounded-lg">
+            <div className="flex items-center space-x-1">
+              <span className="text-luxury-gold font-bold">Tip:</span>
+              {mapMode === '3d' ? (
+                <span>Drag mouse on spatial frame to pivot orientation angle. Select blocks to interact.</span>
+              ) : (
+                <span>Click units to select. Set your location from the details panel to draw pathfinding routes.</span>
+              )}
+            </div>
+            {mapMode === '2d' && (
+              <div className="flex space-x-3 text-[9px] uppercase font-bold text-slate-500">
+                <span className="flex items-center"><span className="w-2 h-2 rounded bg-rose-600 mr-1 inline-block" /> User</span>
+                <span className="flex items-center"><span className="w-2 h-2 rounded bg-luxury-gold mr-1 inline-block" /> Selected</span>
+                <span className="flex items-center"><span className="w-2 h-2 rounded bg-emerald-600 mr-1 inline-block" /> Utilities</span>
+              </div>
+            )}
           </div>
 
         </div>
@@ -674,6 +843,22 @@ export const FloorMap: React.FC<FloorMapProps> = ({ isAdminView = false }) => {
                     {selectedFloor}
                   </span>
                 </div>
+
+                {mapMode === '2d' && selectedRoomData.tenant?.shopName !== 'Vacant Space' && (
+                  <button
+                    onClick={() => {
+                      setUserLocation(selectedRoomData.roomNumber);
+                    }}
+                    className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1.5 ${
+                      userLocation === selectedRoomData.roomNumber
+                        ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300 cursor-default'
+                        : 'bg-luxury-darkBg border border-luxury-darkBorder text-slate-300 hover:text-white hover:border-rose-500/50'
+                    }`}
+                  >
+                    <span>📍</span>
+                    <span>{userLocation === selectedRoomData.roomNumber ? 'Current Location Node' : 'Set as My Location'}</span>
+                  </button>
+                )}
 
                 {/* Details logic */}
                 {selectedRoomData.store ? (

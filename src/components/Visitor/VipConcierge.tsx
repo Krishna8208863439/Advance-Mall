@@ -227,15 +227,82 @@ export const VipConcierge: React.FC = () => {
     { id: 'ann_1', title: 'Luxury Gold Souk Bridal Exhibition', date: 'June 25, 2026', desc: 'Private consultation, champagne reception, and exclusive bridal showcase previews.' }
   ];
 
-  const handleVipBooking = (e: React.FormEvent) => {
+  const loadRazorpayScript = () => {
+    return new Promise<boolean>((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleVipBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setVipSuccess('');
 
     if (!userName.trim()) return;
 
-    bookVipEvent(selectedEventId, userName, 1, vipSeat);
-    setVipSuccess(`Front-row RSVP confirmed for ${userName}! Your digital ticket has been sent to your device.`);
-    setUserName('');
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      alert('Razorpay Checkout failed to load.');
+      return;
+    }
+
+    const options = {
+      key: 'rzp_test_dummykey12345',
+      amount: 1500 * 100, // ₹1,500 ticket fee
+      currency: 'INR',
+      name: 'Amanora Plaza - VIP Concierge',
+      description: 'VIP Event Front-Row RSVP Ticket Purchase',
+      handler: function (response: any) {
+        const payId = response.razorpay_payment_id || `pay_${Date.now()}`;
+        bookVipEvent(selectedEventId, userName, 1, vipSeat, payId);
+        setVipSuccess(`Front-row RSVP confirmed for ${userName}! Ticket Fee ₹1,500 Paid via Razorpay (ID: ${payId}). Digital pass generated.`);
+        setUserName('');
+      },
+      prefill: {
+        name: userName,
+      },
+      theme: {
+        color: '#d4af37'
+      }
+    };
+
+    const paymentObject = new (window as any).Razorpay(options);
+    paymentObject.open();
+  };
+
+  const handleFoodCheckout = async () => {
+    const total = foodCourtCart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    if (total <= 0) return;
+
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      alert('Razorpay Checkout failed to load.');
+      return;
+    }
+
+    const options = {
+      key: 'rzp_test_dummykey12345',
+      amount: total * 100,
+      currency: 'INR',
+      name: 'Amanora Plaza - Unified Food Court',
+      description: 'Unified Food Tray Checkout Payment',
+      handler: function (response: any) {
+        const payId = response.razorpay_payment_id || `pay_${Date.now()}`;
+        checkoutFoodCart(payId);
+      },
+      prefill: {
+        name: 'Food Court Customer',
+      },
+      theme: {
+        color: '#d4af37'
+      }
+    };
+
+    const paymentObject = new (window as any).Razorpay(options);
+    paymentObject.open();
   };
 
   // ----------------------------------------------------
@@ -1075,7 +1142,7 @@ export const VipConcierge: React.FC = () => {
 
                 {activeTab === 'food' && (
                   <button
-                    onClick={checkoutFoodCart}
+                    onClick={handleFoodCheckout}
                     className="w-full bg-luxury-gold hover:bg-luxury-gold-dark text-black font-extrabold text-xs py-2 rounded-lg shadow-gold-glow transition-all"
                   >
                     Place Order & Pay Unified Bill
