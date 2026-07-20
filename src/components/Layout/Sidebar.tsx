@@ -40,11 +40,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const adminMenu = [
-    { id: 'tenants', label: t('nav.tenants'), icon: Grid },
-    { id: 'cctv', label: t('nav.cctv'), icon: Video },
-    { id: 'parking', label: t('nav.parking'), icon: Car },
-    { id: 'attendance', label: t('nav.attendance'), icon: Users },
-    { id: 'heatmap', label: t('nav.heatmap'), icon: Map },
+    { id: 'tenants', label: 'Shops & Tenants', icon: Grid },
+    { id: 'finance-billing', label: 'Finance & Billing', icon: Sparkles },
+    { id: 'cctv', label: 'CCTV Control', icon: Video },
+    { id: 'parking', label: 'Smart Parking', icon: Car },
+    { id: 'attendance', label: 'Staff Roster', icon: Users },
+    { id: 'face-attendance', label: 'Biometric Face AI', icon: Users },
+    { id: 'gps-radar', label: 'Live Staff GPS', icon: Map },
+    { id: 'smart-energy', label: 'Smart Energy IoT', icon: Sparkles },
+    { id: 'dynamic-leasing', label: 'Dynamic Shop Leasing', icon: ShoppingBag },
+    { id: 'emergency-module', label: 'Emergency Panic', icon: ShieldAlert },
+    { id: 'ai-analytics', label: 'AI Predictive ML', icon: Sparkles },
     { id: 'history', label: t('nav.history'), icon: History },
   ];
 
